@@ -4,7 +4,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./casdoor.cfg:/conf
+      - ./casdoor.conf:/conf/app.conf
     depends_on:
       pg-auth-service:
         condition: service_healthy
