@@ -14,6 +14,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: casdoor
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U admin" ]
       interval: 15s
