@@ -1,0 +1,21 @@
+services:
+  auth-service:
+    image: casbin/casdoor:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./casdoor.cfg:/conf
+    depends_on:
+      pg-auth-service:
+        condition: service_healthy
+
+  pg-auth-service:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
