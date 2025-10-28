@@ -1,0 +1,17 @@
+{
+  "name": "postgres-source-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "pg-channel-service",
+    "database.port": "5432",
+    "database.user": "admin",
+    "database.password": "123456",
+    "database.dbname": "channel",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_slot",
+    "publication.name": "debezium_publication",
+    "publication.autocreate.mode": "filtered",
+    "table.include.list": "public.channels",
+    "topic.prefix": "channel-svc"
+  }
+}

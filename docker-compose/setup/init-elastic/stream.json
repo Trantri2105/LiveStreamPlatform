@@ -1,0 +1,49 @@
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text"
+      },
+      "hls_url": {
+        "type": "keyword"
+      },
+      "live_chat_url": {
+        "type": "keyword"
+      },
+      "srt_server_url": {
+        "type": "keyword"
+      },
+      "stream_key": {
+        "type": "keyword"
+      },
+      "description": {
+        "type": "keyword"
+      },
+      "channel": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "title": {
+            "type": "text"
+          }
+        }
+      },
+      "category": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "title": {
+            "type": "text"
+          }
+        }
+      }
+    }
+  }
+}

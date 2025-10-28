@@ -1,0 +1,123 @@
+services:
+  ome:
+    image: airensoft/ovenmediaengine:latest
+    container_name: ome
+    volumes:
+      - ./ovm-conf/Server.xml:/opt/ovenmediaengine/bin/origin_conf/Server.xml`
+    ports:
+      # SRT ingest
+      - "9999:9999/udp"
+      # LL-HLS HTTP
+      - "3333:3333"
+    restart: unless-stopped
+
+  pg-channel-service:
+    image: postgres:18rc1
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./initdb/init_channel_service.sql:/docker-entrypoint-initdb.d/init.sql
+
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
+    environment:
+      node.name: es
+      cluster.name: es-docker-cluster
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      xpack.security.enabled: false
+      discovery.type: single-node
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.17.4
+    environment:
+      ELASTICSEARCH_HOSTS: http://es:9200
+    ports:
+      - "5601:5601"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_KRAFT_MODE: "true"
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9093"
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Qk"
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  source-connector:
+    image: debezium/connect:3.0.0.Final
+    depends_on:
+      kafka:
+        condition: service_healthy
+      pg-channel-service:
+        condition: service_healthy
+    environment:
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: source-connector-configs
+      OFFSET_STORAGE_TOPIC: source-connector-offsets
+      STATUS_STORAGE_TOPIC: source-connector-status
+      BOOTSTRAP_SERVERS: kafka:9092
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_REST_ADVERTISED_HOST_NAME: source-connector
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost:8083/connectors" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  logstash:
+    image: logstash:9.0.2
+    depends_on:
+      init-services:
+        condition: service_completed_successfully
+    volumes:
+      - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./logstash/pipeline/channel.conf:/usr/share/logstash/pipeline/channel.conf
+    environment:
+      - "LS_JAVA_OPTS=-Xms1g -Xmx1g"
+
+  init-services:
+    image: confluentinc/cp-kafka:7.2.15
+    container_name: init-services
+    depends_on:
+      kafka:
+        condition: service_healthy
+      source-connector:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+    volumes:
+      - ./setup:/setup
+    command: [ "bash", "/setup/setup.sh" ]

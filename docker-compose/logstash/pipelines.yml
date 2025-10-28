@@ -1,0 +1,2 @@
+- pipeline.id: channels-pipeline
+  path.config: "/usr/share/logstash/pipeline/channel.conf"

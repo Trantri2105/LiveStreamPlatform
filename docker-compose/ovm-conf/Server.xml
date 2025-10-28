@@ -1,0 +1,173 @@
+<Server version="8">
+    <Type>origin</Type>
+    <IP>*</IP>
+    <PrivacyProtection>false</PrivacyProtection>
+    <Bind>
+        <Providers>
+            <!-- SRT ingest port -->
+            <SRT>
+                <Port>9999</Port>
+                <Options>
+                    <Option>
+                        <Key>SRTO_RCVLATENCY</Key>
+                        <Value>200</Value> <!-- milliseconds -->
+                    </Option>
+                    <Option>
+                        <Key>SRTO_PEERLATENCY</Key>
+                        <Value>200</Value> <!-- milliseconds -->
+                    </Option>
+                </Options>
+            </SRT>
+        </Providers>
+
+        <Publishers>
+            <!-- LL-HLS publisher -->
+            <LLHLS>
+                <Port>3333</Port>
+                <WorkerCount>4</WorkerCount>
+            </LLHLS>
+        </Publishers>
+    </Bind>
+
+    <VirtualHosts>
+        <VirtualHost>
+            <Name>default</Name>
+            <Host>
+                <Names>
+                    <Name>*</Name>
+                </Names>
+            </Host>
+
+            <AdmissionWebhooks>
+                <ControlServerUrl>http://192.168.1.7:8080/admission</ControlServerUrl>
+                <SecretKey>1234</SecretKey>
+                <Timeout>3000</Timeout>
+                <Enables>
+                    <Providers>srt</Providers>
+                </Enables>
+            </AdmissionWebhooks>
+
+            <Applications>
+                <Application>
+                    <Name>app</Name>
+                    <Type>live</Type>
+                    <!-- Allow SRT ingest for this application -->
+                    <Providers>
+                        <SRT/>
+                    </Providers>
+
+                    <!-- ABR output profiles (includes bypass + encoded renditions) -->
+                    <OutputProfiles>
+                        <OutputProfile>
+                            <Name>abr_profile</Name>
+                            <!-- Keep source stream name for all outputs -->
+                            <OutputStreamName>${OriginStreamName}</OutputStreamName>
+
+                            <!-- Master playlist named "master" (LL-HLS URL ends with /master.m3u8) -->
+                            <Playlist>
+                                <Name>Main ABR</Name>
+                                <FileName>master</FileName>
+                                <Options>
+                                    <EnableTsPackaging>false</EnableTsPackaging>
+                                </Options>
+
+                                <Rendition>
+                                    <Name>source</Name>
+                                    <Video>bypass_video</Video>
+                                    <Audio>bypass_audio</Audio>
+                                </Rendition>
+                                <Rendition>
+                                    <Name>720p</Name>
+                                    <Video>v720</Video>
+                                    <Audio>bypass_audio</Audio>
+                                </Rendition>
+                                <Rendition>
+                                    <Name>480p</Name>
+                                    <Video>v480</Video>
+                                    <Audio>bypass_audio</Audio>
+                                </Rendition>
+                                <Rendition>
+                                    <Name>360p</Name>
+                                    <Video>v360</Video>
+                                    <Audio>bypass_audio</Audio>
+                                </Rendition>
+                            </Playlist>
+                            <Encodes> <!-- Pass-through if codecs match -->
+                                <Audio>
+                                    <Name>bypass_audio</Name>
+                                    <Bypass>true</Bypass>
+                                </Audio>
+                                <Video>
+                                    <Name>bypass_video</Name>
+                                    <Bypass>true</Bypass>
+                                </Video>
+                                <Video>
+                                    <Name>v720</Name>
+                                    <Codec>h264</Codec>
+                                    <Bitrate>3000000</Bitrate>
+                                    <Framerate>30</Framerate>
+                                    <Width>1280</Width>
+                                    <Height>720</Height>
+                                    <Preset>faster</Preset>
+                                    <BypassIfMatch>
+                                        <Codec>eq</Codec>
+                                        <Width>lte</Width>
+                                        <Height>lte</Height>
+                                        <SAR>eq</SAR>
+                                    </BypassIfMatch>
+                                </Video>
+                                <Video>
+                                    <Name>v480</Name>
+                                    <Codec>h264</Codec>
+                                    <Bitrate>1200000</Bitrate>
+                                    <Framerate>30</Framerate>
+                                    <Width>854</Width>
+                                    <Height>480</Height>
+                                    <Preset>faster</Preset>
+                                    <BypassIfMatch>
+                                        <Codec>eq</Codec>
+                                        <Width>lte</Width>
+                                        <Height>lte</Height>
+                                        <SAR>eq</SAR>
+                                    </BypassIfMatch>
+                                </Video>
+                                <Video>
+                                    <Name>v360</Name>
+                                    <Codec>h264</Codec>
+                                    <Bitrate>800000</Bitrate>
+                                    <Framerate>30</Framerate>
+                                    <Width>640</Width>
+                                    <Height>360</Height>
+                                    <Preset>faster</Preset>
+                                    <BypassIfMatch>
+                                        <Codec>eq</Codec>
+                                        <Width>lte</Width>
+                                        <Height>lte</Height>
+                                        <SAR>eq</SAR>
+                                    </BypassIfMatch>
+                                </Video>
+                            </Encodes>
+                        </OutputProfile>
+                    </OutputProfiles>
+
+                    <Publishers>
+                        <LLHLS>
+                            <ChunkDuration>0.5</ChunkDuration>
+                            <SegmentDuration>6</SegmentDuration>
+                            <SegmentCount>10</SegmentCount>
+                            <CrossDomains>
+                                <Url>*</Url>
+                            </CrossDomains>
+
+                            <DVR>
+                                <Enable>true</Enable>
+                                <TempStoragePath>/tmp/ome_dvr/</TempStoragePath>
+                                <MaxDuration>1800</MaxDuration>
+                            </DVR>
+                        </LLHLS>
+                    </Publishers>
+                </Application>
+            </Applications>
+        </VirtualHost>
+    </VirtualHosts>
+</Server>
