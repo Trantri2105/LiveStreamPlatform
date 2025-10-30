@@ -121,3 +121,31 @@ services:
     volumes:
       - ./setup:/setup
     command: [ "bash", "/setup/setup.sh" ]
+
+  pg-casdoor:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: casdoor
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      retries: 5
+
+  casdoor:
+    image: casbin/casdoor:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./casdoor-conf/app.conf:/conf/app.conf
+    depends_on:
+      pg-casdoor:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
