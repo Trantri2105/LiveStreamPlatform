@@ -8,7 +8,7 @@
         "type": "text"
       },
       "description": {
-        "type": "keyword"
+        "type": "text"
       },
       "created_at": {
         "type": "date"

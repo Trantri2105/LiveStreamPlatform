@@ -13,6 +13,7 @@ tags:
     description: Channel management
 
 
+
 components:
   securitySchemes:
     BearerAuth:
