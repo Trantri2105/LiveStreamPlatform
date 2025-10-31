@@ -1,0 +1,292 @@
+openapi: 3.0.3
+info:
+  title: Realtime Chat Service
+  version: 1.0.0
+  description: |
+    REST and WebSocket APIs for a thread-based chat service.
+
+    ## Authentication
+    - **JWT Bearer** is required for all REST endpoints and during the WebSocket handshake.
+    - Send `Authorization: Bearer <token>` or a cookie named `access_token`.
+    - (Temporary dev fallback) You may also provide `?token=<JWT>` as a query parameter when opening the WebSocket.
+
+    ## WebSocket
+    - Endpoint: `GET /ws/chat/{threadId}`
+    - Use standard WebSocket upgrade with the **same** `Authorization`/cookie rules.
+    - Server pushes recent history (up to 50 messages) upon connect.
+    - Client sends JSON frames of the form `{ "content": "..." }`.
+    - Server broadcasts JSON frames with type `"history"` or `"message"`.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Chat Threads
+    description: Create/close chat threads and list messages
+  - name: WebSocket
+    description: Real-time chat channel (upgrade to WebSocket)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/chat/thread:
+    post:
+      tags: [Chat Threads]
+      summary: Create a new chat thread
+      description: Creates an active chat thread for a given stream and returns the thread id and WebSocket URL.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateThreadRequest'
+            example:
+              stream_id: stream-001
+      responses:
+        '200':
+          description: Thread created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateThreadResponse'
+              example:
+                thread_id: "6a9d9c45-5c71-48a7-8e27-2f3a3b2a5f5e"
+                ws_url: "/ws/chat/6a9d9c45-5c71-48a7-8e27-2f3a3b2a5f5e"
+                stream_id: "stream-001"
+        '400':
+          description: Bad request (e.g., missing stream_id)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Unauthorized (missing/invalid JWT)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/chat/thread/{threadId}/messages:
+    get:
+      tags: [Chat Threads]
+      summary: List recent messages in a thread
+      description: Returns up to the 100 most recent messages for the specified thread, ordered by creation time descending.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+      responses:
+        '200':
+          description: Messages fetched
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+              example:
+                - id: 123
+                  thread_id: "6a9d9c45-5c71-48a7-8e27-2f3a3b2a5f5e"
+                  user_id: "user-123"
+                  username: "alice"
+                  content: "Hello!"
+                  created_at: "2025-01-01T10:00:00Z"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/chat/thread/{threadId}/close:
+    post:
+      tags: [Chat Threads]
+      summary: Close a chat thread
+      description: Marks the thread as inactive. New WebSocket connections will be rejected.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+      responses:
+        '200':
+          description: Thread closed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: closed
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /ws/chat/{threadId}:
+    get:
+      tags: [WebSocket]
+      summary: WebSocket handshake for a chat thread
+      description: |
+        Upgrades the HTTP connection to a WebSocket for real-time chat.
+
+        **Authentication:**
+        - Provide `Authorization: Bearer <JWT>` header, or a cookie `access_token=<JWT>`.
+        - As a temporary dev fallback, `?token=<JWT>` query parameter is also supported.
+
+        **Frames:**
+        - **Client → Server** (`text`): `{"content": "Hi everyone!"}`
+        - **Server → Client** (`text`):
+          - History frame: `{"type":"history","user_id":"...","username":"...","content":"...","timestamp": 1700000000}`
+          - Message frame: `{"type":"message","user_id":"...","username":"...","content":"...","timestamp": 1700000001}`
+
+        **Notes:**
+        - Server sends up to 50 most recent history frames on connect.
+        - Ping/Pong is used as heartbeat.
+      parameters:
+        - $ref: '#/components/parameters/ThreadId'
+        - in: query
+          name: token
+          schema:
+            type: string
+          required: false
+          description: |
+            JWT token (dev fallback). Prefer Authorization header or cookie in production.
+      responses:
+        '101':
+          description: Switching Protocols (WebSocket upgrade)
+        '401':
+          description: Unauthorized (missing/invalid JWT)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Thread not found or inactive
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ThreadId:
+      in: path
+      name: threadId
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Unique identifier of the chat thread
+
+  schemas:
+    CreateThreadRequest:
+      type: object
+      required: [stream_id]
+      properties:
+        stream_id:
+          type: string
+          description: Arbitrary stream identifier linking the thread to an upstream context
+      example:
+        stream_id: stream-001
+
+    CreateThreadResponse:
+      type: object
+      required: [ws_url]
+      properties:
+        ws_url:
+          type: string
+          description: Relative WebSocket URL for this thread
+          example: /ws/chat/6a9d9c45-5c71-48a7-8e27-2f3a3b2a5f5e
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        thread_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+        username:
+          type: string
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      example:
+        error: "Unauthorized: missing bearer token"
+
+  x-websocket-schemas:
+    ClientToServerMessage:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          description: Message body (trimmed; server may limit length)
+      example:
+        content: "Hello from client"
+
+    ServerToClientEvent:
+      type: object
+      required: [type, user_id, username, content, timestamp]
+      properties:
+        type:
+          type: string
+          enum: [history, message]
+        user_id:
+          type: string
+        username:
+          type: string
+        content:
+          type: string
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix seconds
+      examples:
+        history:
+          value:
+            type: history
+            user_id: "user-123"
+            username: "alice"
+            content: "Earlier message"
+            timestamp: 1700000000
+        message:
+          value:
+            type: message
+            user_id: "user-456"
+            username: "bob"
+            content: "Live message"
+            timestamp: 1700000001
