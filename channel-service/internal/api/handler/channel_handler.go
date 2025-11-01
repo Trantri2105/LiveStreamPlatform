@@ -89,7 +89,7 @@ func (ch *channelHandler) CreateChannel() gin.HandlerFunc {
 			return
 		}
 		claims := c.Value(middleware.JWTClaimsContextKey).(map[string]string)
-		id := claims["user_id"]
+		id := claims["id"]
 		newChannel := model.Channel{
 			ID:          id,
 			Title:       req.Title,
