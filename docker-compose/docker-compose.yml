@@ -39,7 +39,7 @@ services:
       retries: 5
       start_period: 30s
     ports:
-      - "9200:9200"
+      - "10000:10000"
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.17.4
