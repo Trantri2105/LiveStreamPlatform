@@ -11,14 +11,14 @@ info:
     - (Temporary dev fallback) You may also provide `?token=<JWT>` as a query parameter when opening the WebSocket.
 
     ## WebSocket
-    - Endpoint: `GET /ws/chat/{threadId}`
+    - Endpoint: `GET /ws/chat/{streamId}`
     - Use standard WebSocket upgrade with the **same** `Authorization`/cookie rules.
     - Server pushes recent history (up to 50 messages) upon connect.
     - Client sends JSON frames of the form `{ "content": "..." }`.
     - Server broadcasts JSON frames with type `"history"` or `"message"`.
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8001
     description: Local development server
 
 tags:
@@ -35,7 +35,7 @@ paths:
     post:
       tags: [Chat Threads]
       summary: Create a new chat thread
-      description: Creates an active chat thread for a given stream and returns the thread id and WebSocket URL.
+      description: Creates an active chat thread for a given stream and returns WebSocket URL.
       security:
         - bearerAuth: []
       requestBody:
@@ -54,9 +54,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CreateThreadResponse'
               example:
-                thread_id: "6a9d9c45-5c71-48a7-8e27-2f3a3b2a5f5e"
                 ws_url: "/ws/chat/6a9d9c45-5c71-48a7-8e27-2f3a3b2a5f5e"
-                stream_id: "stream-001"
         '400':
           description: Bad request (e.g., missing stream_id)
           content:
@@ -73,7 +71,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
-  /api/chat/thread/{threadId}/messages:
+  /api/chat/thread/{streamId}/messages:
     get:
       tags: [Chat Threads]
       summary: List recent messages in a thread
@@ -81,7 +79,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/StreamId'
       responses:
         '200':
           description: Messages fetched
@@ -109,7 +107,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
-  /api/chat/thread/{threadId}/close:
+  /api/chat/thread/{streamId}/close:
     post:
       tags: [Chat Threads]
       summary: Close a chat thread
@@ -117,7 +115,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/StreamId'
       responses:
         '200':
           description: Thread closed
@@ -140,7 +138,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
-  /ws/chat/{threadId}:
+  /ws/chat/{streamId}:
     get:
       tags: [WebSocket]
       summary: WebSocket handshake for a chat thread
@@ -161,7 +159,7 @@ paths:
         - Server sends up to 50 most recent history frames on connect.
         - Ping/Pong is used as heartbeat.
       parameters:
-        - $ref: '#/components/parameters/ThreadId'
+        - $ref: '#/components/parameters/StreamId'
         - in: query
           name: token
           schema:
@@ -191,9 +189,9 @@ components:
       bearerFormat: JWT
 
   parameters:
-    ThreadId:
+    StreamId:
       in: path
-      name: threadId
+      name: streamId
       required: true
       schema:
         type: string
