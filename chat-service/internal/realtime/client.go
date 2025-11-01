@@ -18,7 +18,7 @@ type ClockCfg struct {
 
 type Client struct {
 	conn     *websocket.Conn
-	threadID string
+	streamID string
 	userID   string
 	username string
 	send     chan []byte
@@ -26,10 +26,10 @@ type Client struct {
 	hub      *Hub
 }
 
-func NewClient(conn *websocket.Conn, threadID, userID, username string, clk ClockCfg, hub *Hub) *Client {
+func NewClient(conn *websocket.Conn, streamID, userID, username string, clk ClockCfg, hub *Hub) *Client {
 	return &Client{
 		conn:     conn,
-		threadID: threadID,
+		streamID: streamID,
 		userID:   userID,
 		username: username,
 		send:     make(chan []byte, 256),
@@ -74,7 +74,7 @@ func (c *Client) ReadPump(th *ThreadHub) {
 		}
 
 		go SaveMessage(c.hub, models.Message{
-			ThreadID:  c.threadID,
+			StreamID:  c.streamID,
 			UserID:    c.userID,
 			Username:  c.username,
 			Content:   content,

@@ -30,11 +30,11 @@ func NewHub(db *gorm.DB) *Hub {
 	}
 }
 
-func (h *Hub) GetOrCreateThreadHub(threadID string) *ThreadHub {
+func (h *Hub) GetOrCreateThreadHub(streamID string) *ThreadHub {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	if th, ok := h.threads[threadID]; ok {
+	if th, ok := h.threads[streamID]; ok {
 		return th
 	}
 	th := &ThreadHub{
@@ -43,7 +43,7 @@ func (h *Hub) GetOrCreateThreadHub(threadID string) *ThreadHub {
 		Register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
-	h.threads[threadID] = th
+	h.threads[streamID] = th
 	go th.run()
 	return th
 }
@@ -56,7 +56,7 @@ func (th *ThreadHub) run() {
 			th.clients[c] = true
 			n := len(th.clients)
 			th.mu.Unlock()
-			log.Printf("[thread %s] +client (total=%d)", c.threadID, n)
+			log.Printf("[thread %s] +client (total=%d)", c.streamID, n)
 
 		case c := <-th.unregister:
 			th.mu.Lock()
@@ -66,7 +66,7 @@ func (th *ThreadHub) run() {
 			}
 			n := len(th.clients)
 			th.mu.Unlock()
-			log.Printf("[thread %s] -client (total=%d)", c.threadID, n)
+			log.Printf("[thread %s] -client (total=%d)", c.streamID, n)
 
 		case msg := <-th.broadcast:
 			th.mu.RLock()
@@ -83,9 +83,9 @@ func (th *ThreadHub) run() {
 	}
 }
 
-func SendHistory(h *Hub, c *Client, threadID string, limit int) {
+func SendHistory(h *Hub, c *Client, streamID string, limit int) {
 	var messages []models.Message
-	if err := h.DB.Where("thread_id = ?", threadID).
+	if err := h.DB.Where("thread_id = ?", streamID).
 		Order("created_at DESC").Limit(limit).Find(&messages).Error; err != nil {
 		log.Println("history load error:", err)
 		return

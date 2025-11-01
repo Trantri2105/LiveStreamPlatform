@@ -11,7 +11,7 @@ type ChatThread struct {
 
 type Message struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
-	ThreadID  string    `gorm:"index"  json:"thread_id"`
+	StreamID  string    `gorm:"index"  json:"stream_id"`
 	UserID    string    `json:"user_id"`
 	Username  string    `json:"username"`
 	Content   string    `json:"content"`
