@@ -22,7 +22,7 @@ func Init(dsn string) *gorm.DB {
 		log.Fatal("AutoMigrate failed:", err)
 	}
 
-	_ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_messages_thread_created ON messages (thread_id, created_at DESC)`)
+	_ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_messages_thread_created ON messages (stream_id, created_at DESC)`)
 
 	sqlDB, _ := db.DB()
 	sqlDB.SetMaxOpenConns(20)
