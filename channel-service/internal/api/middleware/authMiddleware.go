@@ -10,10 +10,6 @@ type AuthMiddleware interface {
 	CheckUserPermission(requiredRole string) gin.HandlerFunc
 }
 
-const (
-	JWTClaimsContextKey = "JWTClaimsContextKey"
-)
-
 type authMiddleware struct{}
 
 func (a authMiddleware) CheckUserPermission(requiredRole string) gin.HandlerFunc {
