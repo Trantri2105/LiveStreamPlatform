@@ -1,0 +1,840 @@
+openapi: 3.1.0
+
+info:
+  title: Server Management API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081
+    description: Local development server
+  - url: http://192.168.159.131:8081
+    description: VM development server
+tags:
+  - name: Auth
+    description: Authentication and authorization
+  - name: Users
+    description: Users management operations
+  - name: Categories
+  - name: Streams
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      security:
+        - BearerAuth: [ 'users:create' ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        200:
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        409:
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+          headers:
+            Set-Cookie:
+              description: Http only cookies contains refresh token
+              schema:
+                type: string
+        404:
+          description: User not found (wrong email)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        400:
+          description: Invalid input format (malformed request body) or invalid password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /auth/logout:
+    post:
+      summary: Logout current sessions
+      tags:
+        - Auth
+      security:
+        - BearerAuth: [ ]
+      responses:
+        200:
+          description: Logout successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+          headers:
+            Set-Cookie:
+              description: Server send this cookies to remove current cookies.
+              schema:
+                type: string
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: "Refresh Access Token"
+      security: [ ]
+      responses:
+        200:
+          description: Access token refresh
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+          headers:
+            Set-Cookie:
+              description: Http only cookies contains refresh token
+              schema:
+                type: string
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /auth/verify:
+    get:
+      tags:
+        - Auth
+      security:
+        - BearerAuth: [ ]
+      responses:
+        204:
+          description: Valid access token
+          headers:
+            X-User-Id:
+              schema:
+                type: string
+            X-User-Role:
+              schema:
+                type: string
+        401:
+          description: Invalid access token (unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /users:
+    get:
+      tags:
+        - Users
+      security:
+        - BearerAuth: [ "users:read" ]
+      summary: Get users list, users will be sorted by id
+      parameters:
+        - name: email
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: sort_order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [ asc, desc ]
+            default: asc
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  schema:
+                    $ref: '#/components/schemas/UserInfoResponse'
+        400:
+          description: Invalid parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user info by id
+      security:
+        - BearerAuth: [ "users:read" ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get user info by id
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+    patch:
+      tags:
+        - Users
+      summary: Update user info
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserInfoRequest'
+      responses:
+        200:
+          description: User info updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        409:
+          description: User mail already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        400:
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /users/me/password:
+    put:
+      tags:
+        - Users
+      summary: Update user password
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordRequest'
+      responses:
+        200:
+          description: User password updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        400:
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /channels:
+    post:
+      tags: [Channels]
+      summary: Create channel for current user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelCreate'
+      responses:
+        '201':
+          description: Channel created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /channels/self:
+    patch:
+      tags: [Channels]
+      summary: Update current user's channel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelUpdate'
+      responses:
+        '200':
+          description: Channel updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /public/channels/{channelId}:
+    get:
+      tags: [Channels]
+      summary: Get channel by id (public)
+      parameters:
+        - in: path
+          name: channelId
+          required: true
+          schema:
+            type: string
+          description: Channel id (UUID)
+      responses:
+        '200':
+          description: Channel found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
+        '404':
+          description: Channel not found
+  /public/channels/search:
+    post:
+      tags: [Channels]
+      summary: Search channels by text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchTextRequest'
+      responses:
+        '200':
+          description: List of channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+  /public/categories/{categoryId}:
+    get:
+      tags: [Categories]
+      summary: Get category by id (public)
+      parameters:
+        - in: path
+          name: categoryId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          description: Category not found
+  /public/categories/search:
+    post:
+      tags: [Categories]
+      summary: Search categories by text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchTextRequest'
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+  /streams:
+    post:
+      tags: [Streams]
+      summary: Create stream
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamCreate'
+      responses:
+        '201':
+          description: Stream created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stream'
+  /public/streams/{streamId}:
+    get:
+      tags: [Streams]
+      summary: Get stream by id (public)
+      parameters:
+        - in: path
+          name: streamId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stream found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetStream'
+  /public/streams/channels/{channelId}:
+    get:
+      tags: [Streams]
+      summary: Get streams by channel id
+      parameters:
+        - in: path
+          name: channelId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of streams for channel
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetStream'
+  /public/streams/search:
+    post:
+      tags: [Streams]
+      summary: Search streams by text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamSearchRequest'
+      responses:
+        '200':
+          description: List of streams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetStream'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Response:
+      type: object
+      properties:
+        message:
+          type: string
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          required: true
+        password:
+          type: string
+          format: password
+          required: true
+        first_name:
+          type: string
+          required: true
+        last_name:
+          type: string
+          required: true
+    UserInfoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        role:
+          type: string
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          required: true
+        password:
+          type: string
+          required: true
+    UpdateUserInfoRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+    UpdatePasswordRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          required: true
+        new_password:
+          type: string
+          required: true
+    AuthenticationResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+    ChannelCreate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    ChannelUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    Channel:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+    SearchTextRequest:
+      type: object
+      properties:
+        search_text:
+          type: string
+        limit:
+          type: int
+        offset:
+          type: int
+    StreamCreate:
+      type: object
+      required: [title, category_id]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category_id:
+          type: string
+    Stream:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/Category'
+        channel:
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+        hls_url:
+          type: string
+          nullable: true
+        live_chat_url:
+          type: string
+          nullable: true
+        srt_server_url:
+          type: string
+          nullable: true
+        stream_key:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+    GetStream:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/Category'
+        channel:
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+        hls_url:
+          type: string
+          nullable: true
+        live_chat_url:
+          type: string
+          nullable: true
+        srt_server_url:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+    StreamSearchRequest:
+      type: object
+      required: [search_text]
+      properties:
+        search_text:
+          type: string
+        status:
+          type: string
+          nullable: true
+        limit:
+          type: integer
+          default: 10
+        offset:
+          type: integer
+          default: 0
+security:
+  - BearerAuth: []
