@@ -10,8 +10,8 @@ import (
 )
 
 type ChatClaims struct {
-	UserID   string `json:"uid"`
-	Username string `json:"uname"`
+	UserID string `json:"user_id"`
+	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -49,8 +49,8 @@ func ParseJWTFromRequest(r *http.Request, secret []byte) (*ChatClaims, error) {
 	if !ok {
 		return nil, errors.New("invalid claims")
 	}
-	if claims.UserID == "" || claims.Username == "" {
-		return nil, errors.New("claims missing uid/uname")
+	if claims.UserID == "" || claims.Role == "" {
+		return nil, errors.New("claims missing user_id/role")
 	}
 	if claims.ExpiresAt != nil && !claims.ExpiresAt.After(time.Now()) {
 		return nil, errors.New("token expired")
