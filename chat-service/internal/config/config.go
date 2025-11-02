@@ -24,7 +24,7 @@ type Config struct {
 
 func Load() Config {
 	godotenv.Load()
-	addr := getEnv("SERVER_ADDR", "localhost:8001")
+	addr := getEnv("SERVER_ADDR", ":8001")
 	dsn := getEnv(
 		"DB_DSN",
 		"postgres://postgres:postgres@pg-chat-service:5432/chatdb?sslmode=disable",

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 	"thanhnt208/chat-service/internal/auth"
-	"thanhnt208/chat-service/internal/config"
 	"thanhnt208/chat-service/internal/models"
 	"time"
 
@@ -50,7 +49,7 @@ func (h *ChatHTTP) CreateChatThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := map[string]string{
-		"ws_url": "ws://" + config.Load().ServerAddr + "/ws/chat/" + thread.StreamID,
+		"ws_url": "/ws/chat/" + thread.StreamID,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
