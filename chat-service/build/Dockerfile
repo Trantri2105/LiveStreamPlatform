@@ -14,7 +14,7 @@ WORKDIR /app
 EXPOSE 8001
 
 COPY --from=builder /app/chat-service .
-COPY internal/config/ ./config/
-COPY .env ./.env
+COPY chat-service/internal/config/ ./config/
+COPY chat-service/.env ./.env
 
 CMD ["./chat-service"]
