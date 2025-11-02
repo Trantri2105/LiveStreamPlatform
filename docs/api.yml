@@ -429,7 +429,7 @@ paths:
       tags: [Channels]
       summary: Create channel for current user
       security:
-        - bearerAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -448,7 +448,7 @@ paths:
       tags: [Channels]
       summary: Update current user's channel
       security:
-        - bearerAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -466,6 +466,7 @@ paths:
     get:
       tags: [Channels]
       summary: Get channel by id (public)
+      security: [ ]
       parameters:
         - in: path
           name: channelId
@@ -486,6 +487,7 @@ paths:
     post:
       tags: [Channels]
       summary: Search channels by text
+      security: [ ]
       requestBody:
         required: true
         content:
@@ -505,6 +507,7 @@ paths:
     get:
       tags: [Categories]
       summary: Get category by id (public)
+      security: [ ]
       parameters:
         - in: path
           name: categoryId
@@ -524,6 +527,7 @@ paths:
     post:
       tags: [Categories]
       summary: Search categories by text
+      security: [ ]
       requestBody:
         required: true
         content:
@@ -544,7 +548,7 @@ paths:
       tags: [Streams]
       summary: Create stream
       security:
-        - bearerAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -562,6 +566,7 @@ paths:
     get:
       tags: [Streams]
       summary: Get stream by id (public)
+      security: [ ]
       parameters:
         - in: path
           name: streamId
@@ -579,6 +584,7 @@ paths:
     get:
       tags: [Streams]
       summary: Get streams by channel id
+      security: [ ]
       parameters:
         - in: path
           name: channelId
@@ -612,6 +618,7 @@ paths:
     post:
       tags: [Streams]
       summary: Search streams by text
+      security: [ ]
       requestBody:
         required: true
         content:
