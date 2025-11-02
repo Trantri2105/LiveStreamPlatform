@@ -150,9 +150,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat-router.rule=PathPrefix(`/chat`)"
-      - "traefik.http.routers.chat-router.entrypoints=web,websecure"
-      - "traefik.http.routers.chat-router.tls=true"
-      - "traefik.http.services.chat-service.loadbalancer.server.port=8001"
+      - "traefik.http.routers.chat-router.middlewares=custom-auth"
+      - "traefik.http.routers.chat-public-router.rule=PathPrefix(`/public`)"
+      - "traefik.http.services.chat-service.loadbalancer.server.port=8080"
 
   es:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
