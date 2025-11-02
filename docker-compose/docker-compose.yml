@@ -115,7 +115,7 @@ services:
       POSTGRES_DB: channel
 
       SERVER_PORT: 8080
-      SERVER_CHAT_SERVER_URL: http://192.168.1.8:8001
+      SERVER_CHAT_SERVER_URL: http://128.199.90.123:8001
       SERVER_SRT_SERVER_URL: srt://localhost:9999
       SERVER_HLS_SERVER_URL: http://localhost:3333
 
