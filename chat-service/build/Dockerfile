@@ -15,5 +15,6 @@ EXPOSE 8001
 
 COPY --from=builder /app/chat-service .
 COPY internal/config/ ./config/
+COPY .env ./.env
 
 CMD ["./chat-service"]

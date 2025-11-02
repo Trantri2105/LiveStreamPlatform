@@ -134,7 +134,7 @@ services:
 
   chat-service:
     build:
-      dockerfile: ./chat-service/Dockerfile
+      dockerfile: ./chat-service/build/Dockerfile
       context: ..
     environment:
       SERVER_ADDR: ":8001"
