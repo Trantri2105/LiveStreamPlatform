@@ -46,11 +46,11 @@ func (s *Server) Start() error {
 		PingPeriod:     s.cfg.PingPeriod,
 	}, s.cfg.JWTSecret)
 
-	api := r.PathPrefix("/api").Subrouter()
+	api := r.PathPrefix("/public/chat").Subrouter()
 	api.Use(middleware.AuthRequired(s.cfg.JWTSecret))
-	api.HandleFunc("/chat/thread", chatHTTP.CreateChatThread).Methods("POST", "OPTIONS")
-	api.HandleFunc("/chat/thread/{streamId}/messages", chatHTTP.GetThreadMessages).Methods("GET", "OPTIONS")
-	api.HandleFunc("/chat/thread/{streamId}/close", chatHTTP.CloseThread).Methods("POST", "OPTIONS")
+	api.HandleFunc("/thread", chatHTTP.CreateChatThread).Methods("POST", "OPTIONS")
+	api.HandleFunc("/thread/{streamId}/messages", chatHTTP.GetThreadMessages).Methods("GET", "OPTIONS")
+	api.HandleFunc("/thread/{streamId}/close", chatHTTP.CloseThread).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/ws/chat/{streamId}", chatWS.Handle)
 
