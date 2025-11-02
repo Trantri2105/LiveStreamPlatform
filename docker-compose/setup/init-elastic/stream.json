@@ -22,6 +22,9 @@
       "description": {
         "type": "keyword"
       },
+      "status": {
+        "type": "keyword"
+      },
       "channel": {
         "type": "nested",
         "properties": {

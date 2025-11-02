@@ -2,15 +2,16 @@ package route
 
 import (
 	"channel-service/internal/api/handler"
-	"channel-service/internal/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetUpChannelRoutes(r *gin.Engine, h handler.ChannelHandler, m middleware.AuthMiddleware) {
-	channelRoutes := r.Group("/channels")
-	channelRoutes.POST("", m.ValidateAndExtractJwt(), m.CheckUserPermission("admin"), h.CreateChannel())
-	channelRoutes.PATCH("/self", m.ValidateAndExtractJwt(), h.UpdateChannelByID())
-	channelRoutes.GET("/:id", h.GetChannelByID())
-	channelRoutes.POST("/search", h.GetChannelBySearchText())
+func SetUpChannelRoutes(r *gin.Engine, h handler.ChannelHandler) {
+	publicChannelRoutes := r.Group("/public/channels")
+	publicChannelRoutes.GET("/:id", h.GetChannelByID())
+	publicChannelRoutes.POST("/search", h.GetChannelBySearchText())
+
+	privateChannelRoutes := r.Group("/channels")
+	privateChannelRoutes.POST("", h.CreateChannel())
+	privateChannelRoutes.PATCH("/self", h.UpdateChannelByID())
 }

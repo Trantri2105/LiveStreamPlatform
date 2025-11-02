@@ -14,3 +14,5 @@ curl -X PUT "http://es:9200/channels" -H "Content-Type: application/json" -d @/s
 curl -X PUT "http://es:9200/categories" -H "Content-Type: application/json" -d @/setup/init-elastic/category.json
 
 curl -X PUT "http://es:9200/streams" -H "Content-Type: application/json" -d @/setup/init-elastic/stream.json
+
+curl -X POST "http://es:9200/categories/_bulk" -H "Content-Type: application/x-ndjson" --data-binary @/setup/init-elastic/category_data.jsonl

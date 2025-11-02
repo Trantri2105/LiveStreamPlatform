@@ -1,9 +1,22 @@
 services:
+  traefik:
+    image: traefik:v3.5
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:8081"
+      - "--providers.docker.exposedbydefault=false"
+    ports:
+      - "8081:8081"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   ome:
     image: airensoft/ovenmediaengine:latest
     container_name: ome
     volumes:
-      - ./ovm-conf/Server.xml:/opt/ovenmediaengine/bin/origin_conf/Server.xml`
+      - ./ovm-conf/Server.xml:/opt/ovenmediaengine/bin/origin_conf/Server.xml
     ports:
       # SRT ingest
       - "9999:9999/udp"
@@ -24,6 +37,89 @@ services:
     volumes:
       - ./initdb/init_channel_service.sql:/docker-entrypoint-initdb.d/init.sql
 
+  pg-auth-service:
+    image: postgres:18rc1
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./initdb/init_auth_service.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:latest
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      dockerfile: ./auth-service/build/Dockerfile
+      context: ..
+    environment:
+      POSTGRES_HOST: pg-auth-service
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: auth
+
+      SERVER_PORT: 8080
+      USER_SESSION_TTL: 720h
+
+      JWT_SECRET_KEY: supersecretkey1233456
+      JWT_ACCESS_TOKEN_TTL: 24h
+      JWT_REFRESH_TOKEN_TTL: 168h
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      pg-auth-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-router.rule=PathPrefix(`/auth`)"
+      - "traefik.http.routers.user-router.rule=PathPrefix(`/users`)"
+      - "traefik.http.middlewares.custom-auth.forwardauth.address=http://auth-service:8080/auth/verify"
+      - "traefik.http.middlewares.custom-auth.forwardauth.authResponseHeaders=X-User-Id,X-User-Role"
+      - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
+
+  channel-service:
+    build:
+      dockerfile: ./channel-service/build/Dockerfile
+      context: ..
+    environment:
+      POSTGRES_HOST: pg-channel-service
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: channel
+
+      SERVER_PORT: 8080
+      SERVER_CHAT_SERVER_URL: http://192.168.1.8:8002
+      SERVER_SRT_SERVER_URL: srt://localhost:9999
+      SERVER_HLS_SERVER_URL: http://localhost:3333
+
+      ELASTICSEARCH_ADDRESSES: http://es:9200
+    depends_on:
+      init-services:
+        condition: service_completed_successfully
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.channel-router.rule=PathPrefix(`/channels`)"
+      - "traefik.http.routers.channel-router.middlewares=custom-auth"
+      - "traefik.http.routers.stream-router.rule=PathPrefix(`/streams`)"
+      - "traefik.http.routers.stream-router.middlewares=custom-auth"
+      - "traefik.http.routers.public-router.rule=PathPrefix(`/public`)"
+      - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
+
   es:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
     environment:
@@ -38,8 +134,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    ports:
-      - "9200:9200"
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.17.4
@@ -121,27 +215,4 @@ services:
     volumes:
       - ./setup:/setup
     command: [ "bash", "/setup/setup.sh" ]
-
-  pg-casdoor:
-    image: postgres:latest
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_DB: casdoor
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 5s
-      retries: 5
-
-  casdoor:
-    image: casbin/casdoor:latest
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./casdoor-conf/app.conf:/conf/app.conf
-    depends_on:
-      pg-casdoor:
-        condition: service_healthy
 

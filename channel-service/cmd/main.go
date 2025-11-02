@@ -3,9 +3,9 @@ package main
 import (
 	"channel-service/internal/api/handler"
 	"channel-service/internal/api/route"
+	"channel-service/internal/client"
 	"channel-service/internal/config"
 	"channel-service/internal/infra"
-	"channel-service/internal/pkg/middleware"
 	"channel-service/internal/repo"
 	"channel-service/internal/service"
 	"context"
@@ -28,7 +28,10 @@ func main() {
 		log.Fatal(fmt.Sprintf("load config error: %v", err))
 	}
 
-	logger, _ := zap.NewProduction()
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatal(fmt.Sprintf("create zap logger error: %v", err))
+	}
 	defer logger.Sync()
 
 	db, err := infra.NewPostgresConnection(appConfig.Postgres)
@@ -54,12 +57,21 @@ func main() {
 	channelService := service.NewChannelService(channelRepo)
 	channelHandler := handler.NewChannelHandler(logger, channelService)
 
-	m := middleware.NewAuthMiddleware()
+	categoryRepo := repo.NewCategoryRepository(esClient)
+	categoryService := service.NewCategoryService(categoryRepo)
+	categoryHandler := handler.NewCategoryHandler(logger, categoryService)
+
+	streamRepo := repo.NewStreamRepository(esClient)
+	chatClient := client.NewChatClient(appConfig.Server.ChatServerUrl)
+	streamService := service.NewStreamService(channelService, categoryService, streamRepo, appConfig.Server.SrtServerUrl, appConfig.Server.HlsServerUrl, chatClient)
+	streamHandler := handler.NewStreamHandler(logger, streamService)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	route.SetUpChannelRoutes(r, channelHandler, m)
+	route.SetUpChannelRoutes(r, channelHandler)
+	route.SetUpCategoryRoutes(r, categoryHandler)
+	route.SetUpStreamRoutes(r, streamHandler)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", appConfig.Server.Port),

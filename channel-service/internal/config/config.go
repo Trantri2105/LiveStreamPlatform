@@ -12,7 +12,10 @@ type AppConfig struct {
 }
 
 type ServerConfig struct {
-	Port string `envconfig:"SERVER_PORT" default:"8080"`
+	Port          string `envconfig:"SERVER_PORT" default:"8080"`
+	ChatServerUrl string `envconfig:"SERVER_CHAT_SERVER_URL"`
+	SrtServerUrl  string `envconfig:"SERVER_SRT_SERVER_URL"`
+	HlsServerUrl  string `envconfig:"SERVER_HLS_SERVER_URL"`
 }
 
 type PostgresConfig struct {

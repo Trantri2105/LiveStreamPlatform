@@ -49,13 +49,13 @@ func (c *channelRepository) GetChannelBySearchText(ctx context.Context, searchTe
 				"fields":               []string{"title^2", "description"},
 				"type":                 "best_fields",
 				"fuzziness":            "AUTO",
-				"minimum_should_match": "75%",
+				"minimum_should_match": 1,
 			},
 		}
 	} else {
 		query["sort"] = []map[string]interface{}{
 			{
-				"created_at": "desc",
+				"id": "desc",
 			},
 		}
 	}
@@ -83,13 +83,19 @@ func (c *channelRepository) GetChannelBySearchText(ctx context.Context, searchTe
 	}
 	var data struct {
 		Hits struct {
-			Hits []model.Channel `json:"hits"`
+			Hits []struct {
+				Source model.Channel `json:"_source"`
+			} `json:"hits"`
 		} `json:"hits"`
 	}
 	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
 		return nil, fmt.Errorf("channelRepository.GetChannelBySearchText : %w", err)
 	}
-	return data.Hits.Hits, nil
+	var channels []model.Channel
+	for _, hit := range data.Hits.Hits {
+		channels = append(channels, hit.Source)
+	}
+	return channels, nil
 }
 
 func (c *channelRepository) CreateChannel(ctx context.Context, channel model.Channel) error {

@@ -9,6 +9,7 @@ var (
 	ErrChannelNotFound      = errors.New("channel not found")
 	ErrChannelAlreadyExists = errors.New("channel already exists")
 	ErrCategoryNotFound     = errors.New("category not found")
+	ErrStreamNotFound       = errors.New("stream not found")
 )
 
 type ElasticSearchError struct {

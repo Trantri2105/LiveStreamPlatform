@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"bytes"
 	apperrors "channel-service/internal/error"
 	"channel-service/internal/model"
 	"context"
@@ -13,7 +14,7 @@ import (
 
 type CategoryRepository interface {
 	GetCategoryByID(ctx context.Context, id string) (model.Category, error)
-	GetCategoryBySearchText(ctx context.Context, searchText string) (model.Category, error)
+	GetCategoryBySearchText(ctx context.Context, searchText string, offset int, limit int) ([]model.Category, error)
 }
 
 const categoriesIndex = "categories"
@@ -53,9 +54,66 @@ func (c *categoryRepository) GetCategoryByID(ctx context.Context, id string) (mo
 	return data.Source.Category, nil
 }
 
-func (c *categoryRepository) GetCategoryBySearchText(ctx context.Context, searchText string) (model.Category, error) {
-	//TODO implement me
-	panic("implement me")
+func (c *categoryRepository) GetCategoryBySearchText(ctx context.Context, searchText string, offset int, limit int) ([]model.Category, error) {
+	query := map[string]interface{}{
+		"from": offset,
+		"size": limit,
+	}
+
+	if len(searchText) > 0 {
+		query["query"] = map[string]interface{}{
+			"match": map[string]interface{}{
+				"title": map[string]interface{}{
+					"query":                searchText,
+					"fuzziness":            "AUTO",
+					"minimum_should_match": 1,
+				},
+			},
+		}
+	} else {
+		query["sort"] = []map[string]interface{}{
+			{
+				"id": "desc",
+			},
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(query); err != nil {
+		return nil, fmt.Errorf("categoryRepository.GetCategoryBySearchText : %w", err)
+	}
+
+	res, err := c.es.Search(
+		c.es.Search.WithContext(ctx),
+		c.es.Search.WithIndex(categoriesIndex),
+		c.es.Search.WithBody(&buf),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("categoryRepository.GetCategoryBySearchText : %w", err)
+	}
+	defer res.Body.Close()
+	if res.IsError() {
+		var e EsErrorResponse
+		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
+			return nil, fmt.Errorf("categoryRepository.GetCategoryBySearchText : %w", err)
+		}
+		return nil, apperrors.NewElasticSearchError(res.StatusCode, e.Error.Type, e.Error.Reason)
+	}
+	var data struct {
+		Hits struct {
+			Hits []struct {
+				Source model.Category `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
+		return nil, fmt.Errorf("categoryRepository.GetCategoryBySearchText : %w", err)
+	}
+	var categories []model.Category
+	for _, hit := range data.Hits.Hits {
+		categories = append(categories, hit.Source)
+	}
+	return categories, nil
 }
 
 func NewCategoryRepository(es *elasticsearch.Client) CategoryRepository {

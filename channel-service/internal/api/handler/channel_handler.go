@@ -5,7 +5,6 @@ import (
 	"channel-service/internal/api/dto/response"
 	apperrors "channel-service/internal/error"
 	"channel-service/internal/model"
-	"channel-service/internal/pkg/middleware"
 	"channel-service/internal/service"
 	"errors"
 	"fmt"
@@ -39,8 +38,8 @@ func (*channelHandler) formatValidationError(err validator.FieldError) string {
 
 func (ch *channelHandler) GetChannelBySearchText() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req request.SearchChannelRequest
-		if err := c.ShouldBindQuery(&req); err != nil {
+		var req request.SearchRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, response.Response{
 				Message: "invalid request body",
 			})
@@ -88,8 +87,7 @@ func (ch *channelHandler) CreateChannel() gin.HandlerFunc {
 			}
 			return
 		}
-		claims := c.Value(middleware.JWTClaimsContextKey).(map[string]string)
-		id := claims["user_id"]
+		id := c.GetHeader("X-User-Id")
 		newChannel := model.Channel{
 			ID:          id,
 			Title:       req.Title,
@@ -125,8 +123,7 @@ func (ch *channelHandler) UpdateChannelByID() gin.HandlerFunc {
 			})
 			return
 		}
-		claims := c.Value(middleware.JWTClaimsContextKey).(map[string]string)
-		id := claims["user_id"]
+		id := c.GetHeader("X-User-Id")
 		updatedChannel := model.Channel{
 			ID:          id,
 			Title:       req.Title,
