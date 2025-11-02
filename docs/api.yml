@@ -7,8 +7,8 @@ info:
 servers:
   - url: http://localhost:8081
     description: Local development server
-  - url: http://192.168.159.131:8081
-    description: VM development server
+  - url: http://128.199.90.123:8081
+    description: Remote server
 tags:
   - name: Auth
     description: Authentication and authorization

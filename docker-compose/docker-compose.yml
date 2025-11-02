@@ -12,6 +12,18 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    volumes:
+      - ../docs/api.yml:/spec/openapi.yml
+    environment:
+      SWAGGER_JSON: /spec/openapi.yml
+      BASE_URL: /docs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.swagger-router.rule=PathPrefix(`/docs`)"
+      - "traefik.http.services.swagger-service.loadbalancer.server.port=8080"
+
   ome:
     image: airensoft/ovenmediaengine:latest
     container_name: ome
@@ -102,6 +114,13 @@ services:
       - "traefik.http.middlewares.custom-auth.forwardauth.address=http://auth-service:8080/auth/verify"
       - "traefik.http.middlewares.custom-auth.forwardauth.authResponseHeaders=X-User-Id,X-User-Role"
       - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=*"
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowcredentials=true"
+      - "traefik.http.middlewares.cors.headers.addvaryheader=true"
+      - "traefik.http.routers.auth-router.middlewares=cors"
+      - "traefik.http.routers.user-router.middlewares=cors"
 
   channel-service:
     build:
@@ -115,9 +134,9 @@ services:
       POSTGRES_DB: channel
 
       SERVER_PORT: 8080
-      SERVER_CHAT_SERVER_URL: http://128.199.90.123:8001
-      SERVER_SRT_SERVER_URL: srt://localhost:9999
-      SERVER_HLS_SERVER_URL: http://localhost:3333
+      SERVER_CHAT_SERVER_URL: http://chat-service:8001
+      SERVER_SRT_SERVER_URL: srt://128.199.90.123:9999
+      SERVER_HLS_SERVER_URL: http://128.199.90.123:3333
 
       ELASTICSEARCH_ADDRESSES: http://es:9200
     depends_on:
@@ -131,6 +150,9 @@ services:
       - "traefik.http.routers.stream-router.middlewares=custom-auth"
       - "traefik.http.routers.public-router.rule=PathPrefix(`/public`)"
       - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
+      - "traefik.http.routers.channel-router.middlewares=cors"
+      - "traefik.http.routers.stream-router.middlewares=cors"
+      - "traefik.http.routers.public-router.middlewares=cors"
 
   chat-service:
     build:
