@@ -115,7 +115,7 @@ services:
       - "traefik.http.middlewares.custom-auth.forwardauth.authResponseHeaders=X-User-Id,X-User-Role"
       - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
       - "traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=*"
-      - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
       - "traefik.http.middlewares.cors.headers.accesscontrolallowheaders=*"
       - "traefik.http.middlewares.cors.headers.accesscontrolallowcredentials=true"
       - "traefik.http.middlewares.cors.headers.addvaryheader=true"
