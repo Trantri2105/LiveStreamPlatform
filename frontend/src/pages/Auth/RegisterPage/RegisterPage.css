@@ -1,0 +1,20 @@
+.register-page {
+    width: 100%;
+}
+
+.register-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.register-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.register-header p {
+    font-size: 16px;
+    color: #6b7280;
+}
