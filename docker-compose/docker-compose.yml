@@ -145,13 +145,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.channel-router.rule=PathPrefix(`/channels`)"
-      - "traefik.http.routers.channel-router.middlewares=custom-auth"
+      - "traefik.http.routers.channel-router.middlewares=custom-auth,cors"
       - "traefik.http.routers.stream-router.rule=PathPrefix(`/streams`)"
-      - "traefik.http.routers.stream-router.middlewares=custom-auth"
+      - "traefik.http.routers.stream-router.middlewares=custom-auth,cors"
       - "traefik.http.routers.public-router.rule=PathPrefix(`/public`)"
       - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
-      - "traefik.http.routers.channel-router.middlewares=cors"
-      - "traefik.http.routers.stream-router.middlewares=cors"
       - "traefik.http.routers.public-router.middlewares=cors"
 
   chat-service:
