@@ -1,0 +1,145 @@
+.stream-info {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stream-header {
+    margin-bottom: 20px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.status-live {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-init {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-ended {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.stream-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.stream-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 20px;
+}
+
+.channel-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.channel-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.channel-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.channel-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.channel-id {
+    font-size: 12px;
+    color: #6b7280;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+}
+
+.stream-category {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #f3f4f6;
+    border-radius: 6px;
+}
+
+.category-label {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.category-value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 600;
+}
+
+.stream-description h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.stream-description p {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .stream-info {
+        padding: 16px;
+    }
+
+    .stream-title {
+        font-size: 20px;
+    }
+
+    .stream-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .stream-category {
+        width: 100%;
+    }
+}

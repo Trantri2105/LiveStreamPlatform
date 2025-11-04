@@ -6,7 +6,7 @@
 
 .hero-section {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 48px;
 }
 
 .hero-section h1 {
@@ -19,6 +19,55 @@
 .hero-section p {
     font-size: 18px;
     color: #6b7280;
+    margin-bottom: 32px;
+}
+
+.search-form {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+}
+
+.search-form .input-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.search-btn {
+    padding: 12px 32px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    white-space: nowrap;
+}
+
+.search-btn:hover:not(:disabled) {
+    background: #4f46e5;
+}
+
+.search-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.streams-section {
+    margin-top: 40px;
+}
+
+.section-header {
+    margin-bottom: 24px;
+}
+
+.section-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
 }
 
 .livestream-grid {
@@ -27,36 +76,54 @@
     gap: 24px;
 }
 
-.loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    gap: 16px;
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.spinner-large {
-    width: 48px;
-    height: 48px;
-    border: 4px solid #e5e7eb;
-    border-top-color: #6366f1;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+.empty-icon {
+    font-size: 80px;
+    display: block;
+    margin-bottom: 24px;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+.empty-state h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 12px;
+}
+
+.empty-state p {
+    font-size: 16px;
+    color: #6b7280;
 }
 
 @media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 32px;
+    }
+
+    .hero-section p {
+        font-size: 16px;
+    }
+
+    .search-form {
+        flex-direction: column;
+    }
+
+    .search-btn {
+        width: 100%;
+    }
+
     .livestream-grid {
         grid-template-columns: 1fr;
     }
 
-    .hero-section h1 {
-        font-size: 32px;
+    .section-header h2 {
+        font-size: 24px;
     }
 }

@@ -2,31 +2,27 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 
-// Auth Pages
 import LoginPage from '../pages/Auth/LoginPage/LoginPage';
 import RegisterPage from '../pages/Auth/RegisterPage/RegisterPage';
 
-// Livestream Pages
 import HomePage from '../pages/Livestream/HomePage/HomePage';
+import CreateStreamPage from '../pages/Livestream/CreateStreamPage/CreateStreamPage';
+import StreamSetupPage from '../pages/Livestream/StreamSetupPage/StreamSetupPage';
+import StreamViewPage from '../pages/Livestream/StreamViewPage/StreamViewPage';
 
-// Profile Pages
 import ProfilePage from '../pages/Profile/ProfilePage/ProfilePage';
 import EditProfilePage from '../pages/Profile/EditProfilePage/EditProfilePage';
 import ChangePasswordPage from '../pages/Profile/ChangePasswordPage/ChangePasswordPage';
 
-// Channel Pages
 import CreateChannelPage from '../pages/Channel/CreateChannelPage/CreateChannelPage';
 import MyChannelPage from '../pages/Channel/MyChannelPage/MyChannelPage';
 import EditChannelPage from '../pages/Channel/EditChannelPage/EditChannelPage';
 
-// Admin Pages
 import UsersPage from '../pages/Admin/UsersPage/UsersPage';
 import UserDetailPage from '../pages/Admin/UserDetailPage/UserDetailPage';
 
-// Route Components
 import ChannelRequiredRoute from './ChannelRequiredRoute';
 
-// Protected Route Component
 const PrivateRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
 
@@ -38,10 +34,9 @@ const PrivateRoute = ({ children }) => {
         );
     }
 
-    return isAuthenticated ? children : <Navigate to="/login" />;
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
-// Public Route (redirect if authenticated)
 const PublicRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
 
@@ -53,7 +48,7 @@ const PublicRoute = ({ children }) => {
         );
     }
 
-    return !isAuthenticated ? children : <Navigate to="/" />;
+    return !isAuthenticated ? children : <Navigate to="/" replace />;
 };
 
 // Admin Route
@@ -69,11 +64,11 @@ const AdminRoute = ({ children }) => {
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" />;
+        return <Navigate to="/login" replace />;
     }
 
     if (!isAdmin()) {
-        return <Navigate to="/" />;
+        return <Navigate to="/" replace />;
     }
 
     return children;
@@ -83,7 +78,6 @@ const AppRoutes = () => {
     return (
         <BrowserRouter>
             <Routes>
-                {/* Public Routes */}
                 <Route
                     path="/login"
                     element={
@@ -101,7 +95,6 @@ const AppRoutes = () => {
                     }
                 />
 
-                {/* Create Channel Route - Private but before channel check */}
                 <Route
                     path="/create-channel"
                     element={
@@ -111,7 +104,6 @@ const AppRoutes = () => {
                     }
                 />
 
-                {/* Channel Required Routes */}
                 <Route
                     path="/"
                     element={
@@ -121,7 +113,31 @@ const AppRoutes = () => {
                     }
                 />
 
-                {/* Profile Routes - Require Channel */}
+                <Route
+                    path="/create-stream"
+                    element={
+                        <ChannelRequiredRoute>
+                            <CreateStreamPage />
+                        </ChannelRequiredRoute>
+                    }
+                />
+                <Route
+                    path="/stream/:streamId/setup"
+                    element={
+                        <ChannelRequiredRoute>
+                            <StreamSetupPage />
+                        </ChannelRequiredRoute>
+                    }
+                />
+                <Route
+                    path="/stream/:streamId"
+                    element={
+                        <ChannelRequiredRoute>
+                            <StreamViewPage />
+                        </ChannelRequiredRoute>
+                    }
+                />
+
                 <Route
                     path="/profile"
                     element={
@@ -147,7 +163,6 @@ const AppRoutes = () => {
                     }
                 />
 
-                {/* Channel Routes - Require Channel */}
                 <Route
                     path="/my-channel"
                     element={
@@ -165,7 +180,6 @@ const AppRoutes = () => {
                     }
                 />
 
-                {/* Admin Routes */}
                 <Route
                     path="/admin/users"
                     element={
@@ -183,8 +197,7 @@ const AppRoutes = () => {
                     }
                 />
 
-                {/* Redirect unknown routes */}
-                <Route path="*" element={<Navigate to="/" />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
     );

@@ -20,6 +20,11 @@ export const API_ENDPOINTS = {
         UPDATE: '/channels/self',
         GET_BY_ID: (channelId) => `/public/channels/${channelId}`,
     },
+    STREAMS: {
+        CREATE: '/streams',
+        GET_BY_ID: (streamId) => `/public/streams/${streamId}`,
+        SEARCH: '/public/streams/search',
+    }
 };
 
 export const TOKEN_KEY = 'access_token';
@@ -29,3 +34,9 @@ export const USER_ROLES = {
     USER: 'user',
     ADMIN: 'admin',
 };
+
+export const STREAM_STATUS = {
+    INIT: 'init',
+    LIVE: 'live',
+    END: 'end',
+}

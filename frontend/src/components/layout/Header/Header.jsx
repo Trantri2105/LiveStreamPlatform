@@ -24,8 +24,14 @@ const Header = () => {
                 <div className="header-search">
                     <input
                         type="text"
-                        placeholder="Search livestreams..."
+                        placeholder="Search streams..."
                         className="search-input"
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                // Handle search
+                                console.log('Search:', e.target.value);
+                            }
+                        }}
                     />
                     <button className="search-button">🔍</button>
                 </div>
@@ -41,13 +47,14 @@ const Header = () => {
                                 </div>
                             )}
 
-                            <button
-                                className="btn-create-stream"
-                                onClick={() => navigate('/create-livestream')}
-                                disabled={!hasChannel && !isAdmin()}
-                            >
-                                ➕ Go Live
-                            </button>
+                            {hasChannel && !isAdmin() && (
+                                <button
+                                    className="btn-create-stream"
+                                    onClick={() => navigate('/create-stream')}
+                                >
+                                    ➕ Go Live
+                                </button>
+                            )}
 
                             <div className="user-menu">
                                 <button className="user-avatar">
