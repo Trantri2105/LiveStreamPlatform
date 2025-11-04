@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import userService from '../../../../services/userService';
 import './UserList.css';
 
 const UserList = () => {
+    const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -14,13 +16,24 @@ const UserList = () => {
     const fetchUsers = async () => {
         try {
             const response = await userService.getAllUsers();
-            setUsers(response.data || response);
+            setUsers(response);
         } catch (error) {
             console.error('Error fetching users:', error);
-            setError('Failed to load users. You may not have permission.');
+            setError(error.message || error.detail || 'Failed to load users. You may not have permission.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const getRoleBadge = (role) => {
+        if (!role) return '👤 User';
+        if (role === 'admin') return 'Admin';
+        return '👤 User';
+    };
+
+    const getRoleClass = (role) => {
+        if (!role) return 'user';
+        return role.toLowerCase();
     };
 
     if (loading) {
@@ -54,7 +67,7 @@ const UserList = () => {
                         <th>Name</th>
                         <th>Email</th>
                         <th>Role</th>
-                        <th>Created At</th>
+                        <th>User ID</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -63,13 +76,9 @@ const UserList = () => {
                         <tr key={user.id}>
                             <td>
                                 <div className="user-avatar-small">
-                                    {user.avatar_url ? (
-                                        <img src={user.avatar_url} alt={user.first_name} />
-                                    ) : (
-                                        <div className="avatar-placeholder-small">
-                                            {user.first_name?.charAt(0)}{user.last_name?.charAt(0)}
-                                        </div>
-                                    )}
+                                    <div className="avatar-placeholder-small">
+                                        {user.first_name?.charAt(0)}{user.last_name?.charAt(0)}
+                                    </div>
                                 </div>
                             </td>
                             <td>
@@ -79,17 +88,17 @@ const UserList = () => {
                             </td>
                             <td>{user.email}</td>
                             <td>
-                  <span className={`role-badge-small role-${user.role}`}>
-                    {user.role === 'admin' ? '👑 Admin' : '👤 User'}
+                  <span className={`role-badge-small role-${getRoleClass(user.role)}`}>
+                    {getRoleBadge(user.role)}
                   </span>
                             </td>
                             <td>
-                                {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                                <code className="user-id-text">{user.id.slice(0, 8)}...</code>
                             </td>
                             <td>
                                 <button
                                     className="btn-view-details"
-                                    onClick={() => window.open(`/admin/users/${user.id}`, '_blank')}
+                                    onClick={() => navigate(`/admin/users/${user.id}`)}
                                 >
                                     View Details
                                 </button>
@@ -98,6 +107,12 @@ const UserList = () => {
                     ))}
                     </tbody>
                 </table>
+
+                {users.length === 0 && (
+                    <div className="empty-state">
+                        <p>No users found</p>
+                    </div>
+                )}
             </div>
         </div>
     );

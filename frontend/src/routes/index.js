@@ -2,18 +2,31 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 
+// Auth Pages
 import LoginPage from '../pages/Auth/LoginPage/LoginPage';
 import RegisterPage from '../pages/Auth/RegisterPage/RegisterPage';
 
+// Livestream Pages
 import HomePage from '../pages/Livestream/HomePage/HomePage';
 
-import ProfilePage from "../pages/Profile/ProfilePage/ProfilePage";
-import EditProfilePage from "../pages/Profile/EditProfilePage/EditProfilePage";
-import ChangePasswordPage from "../pages/Profile/ChangePasswordPage/ChangePasswordPage";
+// Profile Pages
+import ProfilePage from '../pages/Profile/ProfilePage/ProfilePage';
+import EditProfilePage from '../pages/Profile/EditProfilePage/EditProfilePage';
+import ChangePasswordPage from '../pages/Profile/ChangePasswordPage/ChangePasswordPage';
 
-import UsersPage from "../pages/Admin/UsersPage/UsersPage";
-import UserDetailPage from "../pages/Admin/UserDetailPage/UserDetailPage";
+// Channel Pages
+import CreateChannelPage from '../pages/Channel/CreateChannelPage/CreateChannelPage';
+import MyChannelPage from '../pages/Channel/MyChannelPage/MyChannelPage';
+import EditChannelPage from '../pages/Channel/EditChannelPage/EditChannelPage';
 
+// Admin Pages
+import UsersPage from '../pages/Admin/UsersPage/UsersPage';
+import UserDetailPage from '../pages/Admin/UserDetailPage/UserDetailPage';
+
+// Route Components
+import ChannelRequiredRoute from './ChannelRequiredRoute';
+
+// Protected Route Component
 const PrivateRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
 
@@ -28,6 +41,7 @@ const PrivateRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
+// Public Route (redirect if authenticated)
 const PublicRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
 
@@ -42,30 +56,34 @@ const PublicRoute = ({ children }) => {
     return !isAuthenticated ? children : <Navigate to="/" />;
 };
 
-const AdminRoute = ({children}) => {
-    const {isAuthenticated, isAdmin, loading} = useAuth();
-    if (loading){
-        return(
+// Admin Route
+const AdminRoute = ({ children }) => {
+    const { isAuthenticated, isAdmin, loading } = useAuth();
+
+    if (loading) {
+        return (
             <div className="loading-container">
                 <div className="spinner-large"></div>
             </div>
         );
     }
 
-    if (!isAuthenticated){
+    if (!isAuthenticated) {
         return <Navigate to="/login" />;
     }
 
-    if (!isAdmin()){
+    if (!isAdmin()) {
         return <Navigate to="/" />;
     }
-    return children
-}
+
+    return children;
+};
 
 const AppRoutes = () => {
     return (
         <BrowserRouter>
             <Routes>
+                {/* Public Routes */}
                 <Route
                     path="/login"
                     element={
@@ -83,40 +101,71 @@ const AppRoutes = () => {
                     }
                 />
 
+                {/* Create Channel Route - Private but before channel check */}
                 <Route
-                    path="/"
+                    path="/create-channel"
                     element={
                         <PrivateRoute>
-                            <HomePage />
+                            <CreateChannelPage />
                         </PrivateRoute>
                     }
                 />
 
+                {/* Channel Required Routes */}
+                <Route
+                    path="/"
+                    element={
+                        <ChannelRequiredRoute>
+                            <HomePage />
+                        </ChannelRequiredRoute>
+                    }
+                />
+
+                {/* Profile Routes - Require Channel */}
                 <Route
                     path="/profile"
                     element={
-                        <PrivateRoute>
+                        <ChannelRequiredRoute>
                             <ProfilePage />
-                        </PrivateRoute>
+                        </ChannelRequiredRoute>
                     }
                 />
                 <Route
                     path="/profile/edit"
                     element={
-                        <PrivateRoute>
+                        <ChannelRequiredRoute>
                             <EditProfilePage />
-                        </PrivateRoute>
+                        </ChannelRequiredRoute>
                     }
                 />
                 <Route
                     path="/profile/change-password"
                     element={
-                        <PrivateRoute>
+                        <ChannelRequiredRoute>
                             <ChangePasswordPage />
-                        </PrivateRoute>
+                        </ChannelRequiredRoute>
                     }
                 />
 
+                {/* Channel Routes - Require Channel */}
+                <Route
+                    path="/my-channel"
+                    element={
+                        <ChannelRequiredRoute>
+                            <MyChannelPage />
+                        </ChannelRequiredRoute>
+                    }
+                />
+                <Route
+                    path="/channel/edit"
+                    element={
+                        <ChannelRequiredRoute>
+                            <EditChannelPage />
+                        </ChannelRequiredRoute>
+                    }
+                />
+
+                {/* Admin Routes */}
                 <Route
                     path="/admin/users"
                     element={
@@ -133,6 +182,8 @@ const AppRoutes = () => {
                         </AdminRoute>
                     }
                 />
+
+                {/* Redirect unknown routes */}
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </BrowserRouter>

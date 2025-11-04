@@ -82,7 +82,7 @@ const RegisterForm = () => {
         setLoading(true);
 
         try {
-            await register({
+            const response = await register({
                 email: formData.email,
                 password: formData.password,
                 first_name: formData.first_name,
@@ -91,10 +91,7 @@ const RegisterForm = () => {
 
             setSuccessMessage('Registration successful! Redirecting to login...');
 
-            // Redirect về login sau 2 giây
-            setTimeout(() => {
-                navigate('/login');
-            }, 2000);
+            navigate('/login');
         } catch (error) {
             console.error('Registration error:', error);
             setServerError(error.message || 'Registration failed. Please try again.');

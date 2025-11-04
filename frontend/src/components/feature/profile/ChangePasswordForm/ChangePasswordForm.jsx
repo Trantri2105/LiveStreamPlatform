@@ -64,17 +64,16 @@ const ChangePasswordForm = () => {
         setLoading(true);
 
         try {
-            await userService.changePassword({
+            const response = await userService.changePassword({
                 current_password: formData.current_password,
                 new_password: formData.new_password,
             });
 
             setMessage({
                 type: 'success',
-                text: 'Password changed successfully!',
+                text: response.message || 'Password changed successfully!',
             });
 
-            // Reset form
             setFormData({
                 current_password: '',
                 new_password: '',
@@ -84,7 +83,7 @@ const ChangePasswordForm = () => {
             console.error('Change password error:', error);
             setMessage({
                 type: 'error',
-                text: error.message || 'Failed to change password. Please check your current password.',
+                text: error.message || error.detail || 'Failed to change password. Please check your current password.',
             });
         } finally {
             setLoading(false);

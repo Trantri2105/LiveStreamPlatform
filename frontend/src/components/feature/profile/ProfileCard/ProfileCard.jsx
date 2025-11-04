@@ -2,6 +2,17 @@ import React from 'react';
 import './ProfileCard.css';
 
 const ProfileCard = ({ user }) => {
+    const getRoleBadge = () => {
+        if (!user?.role || user.role === '') return '👤 User';
+        if (user.role === 'admin') return '👑 Admin';
+        return '👤 User';
+    };
+
+    const getRoleClass = () => {
+        if (!user?.role || user.role === '') return 'user';
+        return user.role.toLowerCase();
+    };
+
     return (
         <div className="profile-card">
             <div className="profile-header">
@@ -21,25 +32,21 @@ const ProfileCard = ({ user }) => {
                     </h2>
                     <p className="profile-email">{user?.email}</p>
 
-                    {user?.role && (
-                        <span className={`role-badge role-${user.role}`}>
-              {user.role === 'admin' ? '👑 Admin' : '👤 User'}
-            </span>
-                    )}
+                    <span className={`role-badge role-${getRoleClass()}`}>
+            {getRoleBadge()}
+          </span>
                 </div>
             </div>
 
             <div className="profile-stats">
                 <div className="stat-item">
                     <span className="stat-label">User ID</span>
-                    <span className="stat-value">{user?.id?.slice(0, 8)}...</span>
+                    <span className="stat-value">{user?.id}</span>
                 </div>
 
                 <div className="stat-item">
-                    <span className="stat-label">Member Since</span>
-                    <span className="stat-value">
-            {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-          </span>
+                    <span className="stat-label">Role</span>
+                    <span className="stat-value">{user?.role || 'user'}</span>
                 </div>
             </div>
         </div>

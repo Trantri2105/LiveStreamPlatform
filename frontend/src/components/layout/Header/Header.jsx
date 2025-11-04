@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
+import useChannel from '../../../hooks/useChannel';
 import './Header.css';
 
 const Header = () => {
     const navigate = useNavigate();
     const { user, logout, isAuthenticated, isAdmin } = useAuth();
+    const { channel, hasChannel } = useChannel();
 
     const handleLogout = async () => {
         await logout();
@@ -31,9 +33,18 @@ const Header = () => {
                 <div className="header-actions">
                     {isAuthenticated ? (
                         <>
+                            {hasChannel && !isAdmin() && channel && (
+                                <div className="channel-badge" title={channel.title}>
+                                    📺 {channel.title.length > 20
+                                    ? channel.title.substring(0, 20) + '...'
+                                    : channel.title}
+                                </div>
+                            )}
+
                             <button
                                 className="btn-create-stream"
                                 onClick={() => navigate('/create-livestream')}
+                                disabled={!hasChannel && !isAdmin()}
                             >
                                 ➕ Go Live
                             </button>
@@ -44,11 +55,33 @@ const Header = () => {
                                 </button>
 
                                 <div className="user-dropdown">
+                                    <div className="dropdown-header">
+                                        <div className="dropdown-user-info">
+                                            <strong>{user?.first_name} {user?.last_name}</strong>
+                                            <span>{user?.email}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="dropdown-divider"></div>
+
                                     <div className="dropdown-item" onClick={() => navigate('/profile')}>
                                         👤 Profile
                                     </div>
-                                    <div className="dropdown-item" onClick={() => navigate('/my-channels')}>
-                                        📺 My Channels
+
+                                    {!isAdmin() && hasChannel && (
+                                        <div className="dropdown-item" onClick={() => navigate('/my-channel')}>
+                                            📺 My Channel
+                                        </div>
+                                    )}
+
+                                    {!isAdmin() && !hasChannel && (
+                                        <div className="dropdown-item" onClick={() => navigate('/create-channel')}>
+                                            ➕ Create Channel
+                                        </div>
+                                    )}
+
+                                    <div className="dropdown-item" onClick={() => navigate('/settings')}>
+                                        ⚙️ Settings
                                     </div>
 
                                     {isAdmin() && (

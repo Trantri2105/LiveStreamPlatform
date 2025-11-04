@@ -1,0 +1,29 @@
+.edit-channel-page {
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.edit-channel-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.page-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #111827;
+}
+
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 24px;
+    }
+}

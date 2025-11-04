@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import authService from '../services/authService';
 import userService from '../services/userService';
-import { USER_ROLES} from "../config/api.config";
 
 export const AuthContext = createContext();
 
@@ -17,15 +16,15 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
         try {
             if (authService.isAuthenticated()) {
-                const response = await userService.getMe();
-                setUser(response.data || response);
+                const userInfo = await userService.getMe()
+                setUser(userInfo)
                 setIsAuthenticated(true);
             }
         } catch (error) {
             console.error('Auth verification failed:', error);
             setIsAuthenticated(false);
             setUser(null);
-            await authService.logout();
+            localStorage.removeItem('access_token');
         } finally {
             setLoading(false);
         }
@@ -33,13 +32,14 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (credentials) => {
         try {
-            const response = await authService.login(credentials);
-            const userInfo = await userService.getMe()
-            setUser(userInfo.data || userInfo)
+            const loginResponse = await authService.login(credentials);
+            const userInfo = await userService.getMe();
+            setUser(userInfo);
             setIsAuthenticated(true);
-            return response;
+
+            return loginResponse;
         } catch (error) {
-           throw error;
+            throw error;
         }
     };
 
@@ -59,16 +59,21 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(false);
         } catch (error) {
             console.error('Logout failed:', error);
+            setUser(null);
+            setIsAuthenticated(false);
         }
     };
 
     const updateUserProfile = (updatedUser) => {
-        setUser(updatedUser);
-    }
+        setUser(prevUser => ({
+            ...prevUser,
+            ...updatedUser,
+        }));
+    };
 
     const isAdmin = () => {
-        return user?.role === USER_ROLES.ADMIN
-    }
+        return user?.role === 'admin';
+    };
 
     const value = {
         user,

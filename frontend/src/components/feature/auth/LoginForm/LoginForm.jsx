@@ -26,7 +26,6 @@ const LoginForm = () => {
             [name]: value,
         }));
 
-        // Clear error khi user nhập
         if (errors[name]) {
             setErrors(prev => ({
                 ...prev,
@@ -52,7 +51,6 @@ const LoginForm = () => {
         e.preventDefault();
         setServerError('');
 
-        // Validate form
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);

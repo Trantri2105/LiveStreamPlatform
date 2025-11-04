@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://localhost:8081';
+export const API_BASE_URL = 'http://128.199.90.123:8081';
 
 export const API_ENDPOINTS = {
     AUTH: {
@@ -14,7 +14,12 @@ export const API_ENDPOINTS = {
         CHANGE_PASSWORD: '/users/me/password',
         GET_ALL: '/users',
         GET_BY_ID: (userId) => `/users/${userId}`,
-    }
+    },
+    CHANNELS: {
+        CREATE: '/channels',
+        UPDATE: '/channels/self',
+        GET_BY_ID: (channelId) => `/public/channels/${channelId}`,
+    },
 };
 
 export const TOKEN_KEY = 'access_token';

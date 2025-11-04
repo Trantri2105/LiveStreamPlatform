@@ -28,10 +28,10 @@ const UserDetailPage = () => {
     const fetchUserDetail = async () => {
         try {
             const response = await userService.getUserById(userId);
-            setUser(response.data || response);
+            setUser(response);
         } catch (error) {
             console.error('Error fetching user detail:', error);
-            setError('Failed to load user details. You may not have permission.');
+            setError(error.message || error.detail || 'Failed to load user details. You may not have permission.');
         } finally {
             setLoading(false);
         }
@@ -82,19 +82,17 @@ const UserDetailPage = () => {
                             <h3>Admin Information</h3>
                             <div className="info-grid">
                                 <div className="info-item">
-                                    <span className="info-label">User ID:</span>
-                                    <span className="info-value">{user?.id}</span>
+                                    <span className="info-label">Full User ID:</span>
+                                    <code className="info-value-code">{user?.id}</code>
                                 </div>
                                 <div className="info-item">
-                                    <span className="info-label">Status:</span>
-                                    <span className="info-value">
-                    {user?.is_active ? '✅ Active' : '❌ Inactive'}
-                  </span>
+                                    <span className="info-label">Email:</span>
+                                    <span className="info-value">{user?.email}</span>
                                 </div>
                                 <div className="info-item">
-                                    <span className="info-label">Email Verified:</span>
-                                    <span className="info-value">
-                    {user?.email_verified ? '✅ Yes' : '❌ No'}
+                                    <span className="info-label">Role:</span>
+                                    <span className={`info-value role-badge role-${user?.role || 'user'}`}>
+                    {user?.role === 'admin' ? '👑 Admin' : '👤 User'}
                   </span>
                                 </div>
                             </div>

@@ -74,13 +74,12 @@ const ProfileEditForm = ({ onSuccess }) => {
 
         try {
             const response = await userService.updateProfile(formData);
-
-            // Cập nhật user context
-            updateUserProfile(response.data || response);
+            const updatedUser = await userService.getMe();
+            updateUserProfile(updatedUser);
 
             setMessage({
                 type: 'success',
-                text: 'Profile updated successfully!',
+                text: response.message || 'Profile updated successfully!',
             });
 
             if (onSuccess) {
@@ -90,7 +89,7 @@ const ProfileEditForm = ({ onSuccess }) => {
             console.error('Update profile error:', error);
             setMessage({
                 type: 'error',
-                text: error.message || 'Failed to update profile. Please try again.',
+                text: error.message || error.detail || 'Failed to update profile. Please try again.',
             });
         } finally {
             setLoading(false);
