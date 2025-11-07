@@ -57,10 +57,10 @@ func (h *ChatHTTP) CreateChatThread(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatHTTP) GetThreadMessages(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	threadID := vars["threadId"]
+	streamID := vars["streamId"]
 
 	var messages []models.Message
-	if err := h.DB.Where("thread_id = ?", threadID).
+	if err := h.DB.Where("stream_id = ?", streamID).
 		Order("created_at DESC").Limit(100).Find(&messages).Error; err != nil {
 		http.Error(w, "db error: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -71,10 +71,10 @@ func (h *ChatHTTP) GetThreadMessages(w http.ResponseWriter, r *http.Request) {
 
 func (h *ChatHTTP) CloseThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	threadID := vars["threadId"]
+	streamID := vars["streamId"]
 
 	if err := h.DB.Model(&models.ChatThread{}).
-		Where("id = ? AND active = ?", threadID, true).
+		Where("id = ? AND active = ?", streamID, true).
 		Update("active", false).Error; err != nil {
 		http.Error(w, "db error: "+err.Error(), http.StatusInternalServerError)
 		return
