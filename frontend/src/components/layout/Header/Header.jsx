@@ -86,11 +86,6 @@ const Header = () => {
                                             ➕ Create Channel
                                         </div>
                                     )}
-
-                                    <div className="dropdown-item" onClick={() => navigate('/settings')}>
-                                        ⚙️ Settings
-                                    </div>
-
                                     {isAdmin() && (
                                         <>
                                             <div className="dropdown-divider"></div>

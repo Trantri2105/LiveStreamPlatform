@@ -5,47 +5,44 @@ import useAuth from '../hooks/useAuth';
 export const ChannelContext = createContext();
 
 export const ChannelProvider = ({ children }) => {
-    const { user, isAuthenticated, isAdmin } = useAuth();
+    const { user, isAuthenticated, isAdmin, loading: authLoading } = useAuth();
     const [channel, setChannel] = useState(null);
-    const [hasChannel, setHasChannel] = useState(false);
+    const [hasChannel, setHasChannel] = useState();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (isAuthenticated && user) {
-            checkUserChannel();
-        } else {
-            setLoading(false);
-        }
-    }, [isAuthenticated, user]);
-
-    const checkUserChannel = async () => {
-        if (isAdmin()) {
-            setHasChannel(true);
-            setLoading(false);
-            return;
-        }
-        try {
-            console.log("Check channel exist")
-            const channelData = await channelService.getChannelById(user.id);
-
-            if (channelData) {
-                setChannel(channelData);
+        const fetchChannel = async () => {
+            if (authLoading) return;
+            if (!isAuthenticated || !user) {
+                setHasChannel(false);
+                setLoading(false);
+                return;
+            }
+            if (isAdmin()) {
                 setHasChannel(true);
-            } else {
-                setChannel(null);
-                setHasChannel(false);
+                setLoading(false);
+                return;
             }
-        } catch (error) {
-            console.error('Error checking channel:', error);
 
-            if (error.response?.status === 404) {
+            try {
+                const channelData = await channelService.getChannelById(user.id);
+                if (channelData) {
+                    setChannel(channelData);
+                    setHasChannel(true);
+                } else {
+                    setChannel(null);
+                    setHasChannel(false);
+                }
+            } catch (error) {
+                console.error('Error checking channel:', error);
                 setChannel(null);
                 setHasChannel(false);
+            } finally {
+                setLoading(false);
             }
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        fetchChannel();
+    }, [isAuthenticated, user, authLoading, isAdmin]);
 
     const createChannel = async (channelData) => {
         try {
@@ -98,7 +95,6 @@ export const ChannelProvider = ({ children }) => {
         createChannel,
         updateChannel,
         refreshChannel,
-        checkUserChannel,
     };
 
     return (

@@ -7,6 +7,7 @@ import Button from '../../../components/common/Button/Button';
 import Loading from '../../../components/common/Loading/Loading';
 import streamService from '../../../services/streamService';
 import './StreamViewPage.css';
+import ChatBox from "../../../components/feature/chat/ChatBox/ChatBox";
 
 const StreamViewPage = () => {
     const { streamId } = useParams();
@@ -18,8 +19,6 @@ const StreamViewPage = () => {
 
     useEffect(() => {
         fetchStream();
-
-        // Auto refresh stream info every 30 seconds
         const interval = setInterval(fetchStream, 30000);
         return () => clearInterval(interval);
     }, [streamId]);
@@ -76,13 +75,8 @@ const StreamViewPage = () => {
                         <StreamInfo stream={stream} />
                     </div>
 
-                    {/* Chat Section - Placeholder for future */}
                     <div className="stream-chat-section">
-                        <div className="chat-placeholder">
-                            <h3>💬 Live Chat</h3>
-                            <p>Chat feature coming soon!</p>
-                            <p className="chat-url">Chat URL: {stream.live_chat_url}</p>
-                        </div>
+                        <ChatBox streamId={streamId} />
                     </div>
                 </div>
             </div>

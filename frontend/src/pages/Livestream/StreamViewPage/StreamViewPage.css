@@ -23,45 +23,7 @@
 .stream-chat-section {
     grid-column: 2 / 3;
     grid-row: 1 / 3;
-}
-
-.chat-placeholder {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
     min-height: 600px;
-}
-
-.chat-placeholder h3 {
-    font-size: 20px;
-    font-weight: 700;
-    color: #111827;
-    margin: 0;
-}
-
-.chat-placeholder p {
-    font-size: 14px;
-    color: #6b7280;
-    margin: 0;
-}
-
-.chat-url {
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    color: #9ca3af;
-    word-break: break-all;
-    padding: 8px;
-    background: #f9fafb;
-    border-radius: 4px;
-    max-width: 100%;
 }
 
 .error-page {
@@ -108,8 +70,8 @@
         grid-row: auto;
     }
 
-    .chat-placeholder {
-        min-height: 400px;
+    .stream-chat-section {
+        min-height: 500px;
     }
 }
 
@@ -120,5 +82,9 @@
 
     .stream-view-container {
         gap: 16px;
+    }
+
+    .stream-chat-section {
+        min-height: 400px;
     }
 }

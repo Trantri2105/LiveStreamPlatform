@@ -6,8 +6,7 @@ import useChannel from '../hooks/useChannel';
 const ChannelRequiredRoute = ({ children }) => {
     const { isAuthenticated, loading: authLoading, isAdmin } = useAuth();
     const { hasChannel, loading: channelLoading } = useChannel();
-
-    if (authLoading || channelLoading) {
+    if (authLoading || channelLoading || hasChannel === null) {
         return (
             <div className="loading-container">
                 <div className="spinner-large"></div>

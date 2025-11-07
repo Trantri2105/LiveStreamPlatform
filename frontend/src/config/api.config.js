@@ -1,5 +1,6 @@
 export const API_BASE_URL = 'http://128.199.90.123:8081';
-
+export const CHAT_API_BASE_URL = 'http://128.199.90.123:8001';
+export const WS_BASE_CHAT_URL = 'ws://128.199.90.123:8001';
 export const API_ENDPOINTS = {
     AUTH: {
         REGISTER: '/auth/register',
@@ -24,6 +25,10 @@ export const API_ENDPOINTS = {
         CREATE: '/streams',
         GET_BY_ID: (streamId) => `/public/streams/${streamId}`,
         SEARCH: '/public/streams/search',
+    },
+    CHAT: {
+        GET_MESSAGES: (streamId) => `${CHAT_API_BASE_URL}/api/chat/thread/${streamId}/messages`,
+        WS_CONNECT: (streamId) => `${WS_BASE_CHAT_URL}/ws/chat/${streamId}`,
     }
 };
 
@@ -40,3 +45,9 @@ export const STREAM_STATUS = {
     LIVE: 'live',
     END: 'end',
 }
+
+export const WS_MESSAGE_TYPES = {
+    MESSAGE: 'message',
+    SYSTEM: 'system',
+    ERROR: 'error',
+};
