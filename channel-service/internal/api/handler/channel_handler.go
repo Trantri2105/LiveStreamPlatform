@@ -157,7 +157,7 @@ func (ch *channelHandler) GetChannelByID() gin.HandlerFunc {
 		if err != nil {
 			switch {
 			case errors.Is(err, apperrors.ErrChannelNotFound):
-				c.JSON(http.StatusConflict, response.Response{
+				c.JSON(http.StatusNotFound, response.Response{
 					Error: "channel not found",
 				})
 			default:

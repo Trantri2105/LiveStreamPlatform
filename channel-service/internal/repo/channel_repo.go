@@ -102,7 +102,7 @@ func (c *channelRepository) CreateChannel(ctx context.Context, channel model.Cha
 	if result.Error != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(result.Error, &pgErr) && pgErr.Code == "23505" {
-			if pgErr.ConstraintName == "channels_id_key" {
+			if pgErr.ConstraintName == "channels_pkey" {
 				return apperrors.ErrChannelAlreadyExists
 			}
 		}
