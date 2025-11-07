@@ -75,12 +75,10 @@ const CreateChannelForm = ({ isRequired = false }) => {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
             });
-
             setMessage({
                 type: 'success',
                 text: response.message || 'Channel created successfully! Redirecting...',
             });
-
             // Redirect về trang chủ sau 1.5 giây
             setTimeout(() => {
                 navigate('/', { replace: true });

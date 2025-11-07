@@ -24,8 +24,8 @@ export const ChannelProvider = ({ children }) => {
             setLoading(false);
             return;
         }
-
         try {
+            console.log("Check channel exist")
             const channelData = await channelService.getChannelById(user.id);
 
             if (channelData) {
@@ -50,8 +50,9 @@ export const ChannelProvider = ({ children }) => {
     const createChannel = async (channelData) => {
         try {
             const response = await channelService.createChannel(channelData);
-
+            await new Promise(r => setTimeout(r, 1000));
             const newChannel = await channelService.getChannelById(user.id);
+            console.log("newChannel found:", newChannel)
             setChannel(newChannel);
             setHasChannel(true);
 

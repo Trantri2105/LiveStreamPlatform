@@ -2,56 +2,119 @@ import React, { useEffect, useRef, useState } from 'react';
 import './VideoPlayer.css';
 
 const VideoPlayer = ({ hlsUrl, isLive = false }) => {
-    const videoRef = useRef(null);
+    const containerRef = useRef(null);
+    const playerRef = useRef(null);
     const [error, setError] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [playerLoaded, setPlayerLoaded] = useState(false);
 
     useEffect(() => {
-        if (!hlsUrl || !videoRef.current) return;
+        const checkOvenPlayer = () => {
+            if (window.OvenPlayer) {
+                console.log('OvenPlayer loaded from CDN');
+                setPlayerLoaded(true);
+                return true;
+            }
+            return false;
+        };
+        if (checkOvenPlayer()) {
+            return;
+        }
 
-        // Check if HLS.js is supported
-        if (window.Hls && window.Hls.isSupported()) {
-            const hls = new window.Hls({
-                enableWorker: true,
-                lowLatencyMode: isLive,
-            });
+        let attempts = 0;
+        const maxAttempts = 50;
+        const checkInterval = setInterval(() => {
+            attempts++;
 
-            hls.loadSource(hlsUrl);
-            hls.attachMedia(videoRef.current);
-
-            hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+            if (checkOvenPlayer()) {
+                clearInterval(checkInterval);
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                console.error('OvenPlayer failed to load from CDN after 5 seconds');
+                setError(true);
                 setLoading(false);
-                videoRef.current.play().catch(err => {
-                    console.log('Autoplay prevented:', err);
-                });
+            }
+        }, 100);
+
+        return () => clearInterval(checkInterval);
+    }, []);
+
+    useEffect(() => {
+        if (!playerLoaded || !hlsUrl || !containerRef.current) {
+            return;
+        }
+
+        const cleanup = () => {
+            if (playerRef.current) {
+                try {
+                    playerRef.current.remove();
+                    playerRef.current = null;
+                } catch (err) {
+                    console.warn('Error removing player:', err);
+                }
+            }
+        };
+
+        setError(false);
+        setLoading(true);
+
+        console.log('Creating OvenPlayer with URL:', hlsUrl);
+
+        try {
+            const player = window.OvenPlayer.create(containerRef.current, {
+                sources: [
+                    {
+                        type: 'hls',
+                        file: hlsUrl,
+                    }
+                ],
+                autoStart: false,
+                controls: true,
+                showBigPlayButton: true,
+                width: '100%',
+                aspectRatio: '16:9',
+                mute: false,
+                volume: 100,
+                playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
+                hlsConfig: {
+                    maxBufferLength: 30,
+                    maxMaxBufferLength: 60,
+                },
             });
 
-            hls.on(window.Hls.Events.ERROR, (event, data) => {
-                console.error('HLS Error:', data);
-                if (data.fatal) {
+            playerRef.current = player;
+            console.log('OvenPlayer created successfully');
+            player.on('ready', () => {
+                console.log('✅ OvenPlayer ready');
+                setLoading(false);
+                setError(false);
+            });
+
+            player.on('stateChanged', (state) => {
+                console.log('📊 Player state:', state);
+                if (state.newstate === 'playing') {
+                    setLoading(false);
+                }
+                if (state.newstate === 'error') {
                     setError(true);
                     setLoading(false);
                 }
             });
 
-            return () => {
-                hls.destroy();
-            };
-        }
-        // For Safari/iOS (native HLS support)
-        else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-            videoRef.current.src = hlsUrl;
-            videoRef.current.addEventListener('loadedmetadata', () => {
+            player.on('error', (err) => {
+                console.error('OvenPlayer error:', err);
+                setError(true);
                 setLoading(false);
-                videoRef.current.play().catch(err => {
-                    console.log('Autoplay prevented:', err);
-                });
             });
-        } else {
+
+        } catch (err) {
+            console.error('Failed to create OvenPlayer:', err);
             setError(true);
             setLoading(false);
         }
-    }, [hlsUrl, isLive]);
+
+        return cleanup;
+    }, [playerLoaded, hlsUrl]);
 
     if (error) {
         return (
@@ -60,6 +123,13 @@ const VideoPlayer = ({ hlsUrl, isLive = false }) => {
                     <span className="error-icon">⚠️</span>
                     <h3>Unable to load stream</h3>
                     <p>The stream may not be available or has ended.</p>
+                    {!playerLoaded && (
+                        <p className="error-hint">
+                            OvenPlayer failed to load from CDN.
+                            <br />
+                            Please check your internet connection.
+                        </p>
+                    )}
                 </div>
             </div>
         );
@@ -70,7 +140,7 @@ const VideoPlayer = ({ hlsUrl, isLive = false }) => {
             {loading && (
                 <div className="video-loading">
                     <div className="spinner-large"></div>
-                    <p>Loading stream...</p>
+                    <p>{playerLoaded ? 'Loading stream...' : 'Loading player...'}</p>
                 </div>
             )}
 
@@ -81,12 +151,7 @@ const VideoPlayer = ({ hlsUrl, isLive = false }) => {
                 </div>
             )}
 
-            <video
-                ref={videoRef}
-                controls
-                className="video-element"
-                playsInline
-            />
+            <div ref={containerRef} className="ovenplayer-container" />
         </div>
     );
 };
