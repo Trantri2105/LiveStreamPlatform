@@ -43,7 +43,7 @@ func (h *ChatWS) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := realtime.NewClient(conn, streamID, claims.UserID, claims.Role, h.Clock, h.Hub)
+	client := realtime.NewClient(conn, streamID, claims.UserID, h.Clock, h.Hub)
 	th := h.Hub.GetOrCreateThreadHub(streamID)
 	th.Register <- client
 

@@ -63,16 +63,11 @@ services:
       - ./initdb/init_auth_service.sql:/docker-entrypoint-initdb.d/init.sql
 
   pg-chat-service:
-    image: postgres:18rc1
+    image: postgres:latest
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: chatdb
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin" ]
-      interval: 15s
-      timeout: 5s
-      retries: 5
 
   redis:
     image: redis:latest

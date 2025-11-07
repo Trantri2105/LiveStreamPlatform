@@ -85,7 +85,7 @@ func (th *ThreadHub) run() {
 
 func SendHistory(h *Hub, c *Client, streamID string, limit int) {
 	var messages []models.Message
-	if err := h.DB.Where("thread_id = ?", streamID).
+	if err := h.DB.Where("stream_id = ?", streamID).
 		Order("created_at DESC").Limit(limit).Find(&messages).Error; err != nil {
 		log.Println("history load error:", err)
 		return
@@ -94,7 +94,6 @@ func SendHistory(h *Hub, c *Client, streamID string, limit int) {
 		payload := map[string]any{
 			"type":      "history",
 			"user_id":   messages[i].UserID,
-			"username":  messages[i].Username,
 			"content":   messages[i].Content,
 			"timestamp": messages[i].CreatedAt.Unix(),
 		}

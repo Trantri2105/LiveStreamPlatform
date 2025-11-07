@@ -20,18 +20,16 @@ type Client struct {
 	conn     *websocket.Conn
 	streamID string
 	userID   string
-	role     string
 	send     chan []byte
 	clock    ClockCfg
 	hub      *Hub
 }
 
-func NewClient(conn *websocket.Conn, streamID, userID, role string, clk ClockCfg, hub *Hub) *Client {
+func NewClient(conn *websocket.Conn, streamID, userID string, clk ClockCfg, hub *Hub) *Client {
 	return &Client{
 		conn:     conn,
 		streamID: streamID,
 		userID:   userID,
-		role:     role,
 		send:     make(chan []byte, 256),
 		clock:    clk,
 		hub:      hub,
@@ -76,7 +74,6 @@ func (c *Client) ReadPump(th *ThreadHub) {
 		go SaveMessage(c.hub, models.Message{
 			StreamID:  c.streamID,
 			UserID:    c.userID,
-			Username:  c.role,
 			Content:   content,
 			CreatedAt: time.Now(),
 		})
@@ -84,7 +81,6 @@ func (c *Client) ReadPump(th *ThreadHub) {
 		broadcast := map[string]any{
 			"type":      "message",
 			"user_id":   c.userID,
-			"role":      c.role,
 			"content":   content,
 			"timestamp": time.Now().Unix(),
 		}
