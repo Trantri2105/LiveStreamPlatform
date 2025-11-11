@@ -77,11 +77,11 @@ const EditChannelForm = ({ onSuccess }) => {
         setLoading(true);
 
         try {
-            // Response: { message: "channel updated successfully" }
             const response = await updateChannel({
                 title: formData.title.trim(),
                 description: formData.description.trim(),
             });
+
 
             setMessage({
                 type: 'success',

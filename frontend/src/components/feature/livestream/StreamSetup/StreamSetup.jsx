@@ -8,6 +8,7 @@ const StreamSetup = ({ stream, streamKey }) => {
     const [copied, setCopied] = useState({});
 
     const copyToClipboard = (text, field) => {
+        console.log(text);
         navigator.clipboard.writeText(text).then(() => {
             setCopied({ ...copied, [field]: true });
             setTimeout(() => {
