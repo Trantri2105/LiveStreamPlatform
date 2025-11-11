@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"mime/multipart"
-	"strings"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -25,11 +24,10 @@ type ChannelService interface {
 }
 
 type channelService struct {
-	channelRepo     repo.ChannelRepository
-	minioClient     *minio.Client
-	logger          *zap.Logger
-	minioPublicHost string
-	minioEndpoint   string
+	channelRepo   repo.ChannelRepository
+	minioClient   *minio.Client
+	logger        *zap.Logger
+	minioEndpoint string
 }
 
 func (c *channelService) SetChannelAvatar(ctx context.Context, fileHeader *multipart.FileHeader, channelID string) error {
@@ -90,7 +88,7 @@ func (c *channelService) getPresignedURL(ctx context.Context, key string) (strin
 	if err != nil {
 		return "", err
 	}
-	return strings.Replace(u.String(), c.minioEndpoint, c.minioPublicHost, 1), nil
+	return u.String(), nil
 }
 
 func (c *channelService) GetChannelBySearchText(ctx context.Context, searchText string, limit, offset int) ([]model.Channel, error) {
@@ -112,12 +110,11 @@ func (c *channelService) GetChannelBySearchText(ctx context.Context, searchText 
 	return channels, nil
 }
 
-func NewChannelService(channelRepo repo.ChannelRepository, logger *zap.Logger, minioClient *minio.Client, minioPublicHost string, minioEndpoint string) ChannelService {
+func NewChannelService(channelRepo repo.ChannelRepository, logger *zap.Logger, minioClient *minio.Client, minioEndpoint string) ChannelService {
 	return &channelService{
-		channelRepo:     channelRepo,
-		logger:          logger,
-		minioClient:     minioClient,
-		minioPublicHost: minioPublicHost,
-		minioEndpoint:   minioEndpoint,
+		channelRepo:   channelRepo,
+		logger:        logger,
+		minioClient:   minioClient,
+		minioEndpoint: minioEndpoint,
 	}
 }

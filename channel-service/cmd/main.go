@@ -75,9 +75,12 @@ func main() {
 		logger.Fatal("failed to connect to minio", zap.Error(err))
 	}
 	err = EnsureBucket(minioClient, "images")
+	if err != nil {
+		logger.Fatal("failed to ensure bucket", zap.Error(err))
+	}
 
 	channelRepo := repo.NewChannelRepository(db, esClient)
-	channelService := service.NewChannelService(channelRepo, logger, minioClient, appConfig.Minio.PublicHost, appConfig.Minio.Endpoint)
+	channelService := service.NewChannelService(channelRepo, logger, minioClient, appConfig.Minio.Endpoint)
 	channelHandler := handler.NewChannelHandler(logger, channelService)
 
 	categoryRepo := repo.NewCategoryRepository(esClient)

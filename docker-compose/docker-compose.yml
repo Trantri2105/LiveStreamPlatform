@@ -138,7 +138,6 @@ services:
       MINIO_ENDPOINT: 128.199.90.123:9000
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: admin12345
-      MINIO_PUBLIC_HOST: 128.199.90.123:9000
     depends_on:
       init-services:
         condition: service_completed_successfully

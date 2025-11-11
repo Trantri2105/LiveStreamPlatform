@@ -32,10 +32,9 @@ type ElasticsearchConfig struct {
 }
 
 type MinioConfig struct {
-	Endpoint   string `envconfig:"MINIO_ENDPOINT" required:"true"`
-	AccessKey  string `envconfig:"MINIO_ACCESS_KEY" required:"true"`
-	SecretKey  string `envconfig:"MINIO_SECRET_KEY" required:"true"`
-	PublicHost string `envconfig:"MINIO_PUBLIC_HOST" required:"true"`
+	Endpoint  string `envconfig:"MINIO_ENDPOINT" required:"true"`
+	AccessKey string `envconfig:"MINIO_ACCESS_KEY" required:"true"`
+	SecretKey string `envconfig:"MINIO_SECRET_KEY" required:"true"`
 }
 
 func LoadConfig(path string) (AppConfig, error) {
