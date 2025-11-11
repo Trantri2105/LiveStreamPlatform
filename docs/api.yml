@@ -481,6 +481,13 @@ paths:
                   type: string
                   format: binary
                   description: Avatar image file to upload
+      responses:
+        '200':
+          description: Avatar set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   /public/channels/{channelId}:
     get:
       tags: [Channels]
