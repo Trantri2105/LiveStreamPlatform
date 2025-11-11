@@ -19,8 +19,25 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 )
+
+func EnsureBucket(client *minio.Client, bucketName string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	exists, err := client.BucketExists(ctx, bucketName)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		err = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func main() {
 	appConfig, err := config.LoadConfig("./.env")
@@ -53,8 +70,14 @@ func main() {
 		logger.Info("connected to elasticsearch successfully")
 	}
 
+	minioClient, err := infra.NewMinioClient(appConfig.Minio)
+	if err != nil {
+		logger.Fatal("failed to connect to minio", zap.Error(err))
+	}
+	err = EnsureBucket(minioClient, "images")
+
 	channelRepo := repo.NewChannelRepository(db, esClient)
-	channelService := service.NewChannelService(channelRepo)
+	channelService := service.NewChannelService(channelRepo, logger, minioClient, appConfig.Minio.PublicHost, appConfig.Minio.Endpoint)
 	channelHandler := handler.NewChannelHandler(logger, channelService)
 
 	categoryRepo := repo.NewCategoryRepository(esClient)

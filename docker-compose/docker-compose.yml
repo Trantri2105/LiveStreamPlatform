@@ -134,6 +134,11 @@ services:
       SERVER_HLS_SERVER_URL: http://128.199.90.123:3333
 
       ELASTICSEARCH_ADDRESSES: http://es:9200
+
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin12345
+      MINIO_PUBLIC_HOST: 128.199.90.123:9000
     depends_on:
       init-services:
         condition: service_completed_successfully
@@ -267,5 +272,20 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
+
+  minio:
+    image: quay.io/minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin12345
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
   
 

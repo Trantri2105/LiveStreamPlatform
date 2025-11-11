@@ -462,6 +462,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+  /channels/self/avatar:
+    put:
+      tags: [ Channels ]
+      summary: Set user avatar
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Avatar image file to upload
   /public/channels/{channelId}:
     get:
       tags: [Channels]

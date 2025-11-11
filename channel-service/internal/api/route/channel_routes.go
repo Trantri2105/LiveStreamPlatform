@@ -14,4 +14,5 @@ func SetUpChannelRoutes(r *gin.Engine, h handler.ChannelHandler) {
 	privateChannelRoutes := r.Group("/channels")
 	privateChannelRoutes.POST("", h.CreateChannel())
 	privateChannelRoutes.PATCH("/self", h.UpdateChannelByID())
+	privateChannelRoutes.PUT("/self/avatar", h.SetChannelAvatar())
 }

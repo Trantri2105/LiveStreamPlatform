@@ -9,13 +9,14 @@ type AppConfig struct {
 	Server   ServerConfig
 	Postgres PostgresConfig
 	Elastic  ElasticsearchConfig
+	Minio    MinioConfig
 }
 
 type ServerConfig struct {
 	Port          string `envconfig:"SERVER_PORT" default:"8080"`
-	ChatServerUrl string `envconfig:"SERVER_CHAT_SERVER_URL"`
-	SrtServerUrl  string `envconfig:"SERVER_SRT_SERVER_URL"`
-	HlsServerUrl  string `envconfig:"SERVER_HLS_SERVER_URL"`
+	ChatServerUrl string `envconfig:"SERVER_CHAT_SERVER_URL" required:"true"`
+	SrtServerUrl  string `envconfig:"SERVER_SRT_SERVER_URL" required:"true"`
+	HlsServerUrl  string `envconfig:"SERVER_HLS_SERVER_URL" required:"true"`
 }
 
 type PostgresConfig struct {
@@ -28,6 +29,13 @@ type PostgresConfig struct {
 
 type ElasticsearchConfig struct {
 	Addresses []string `envconfig:"ELASTICSEARCH_ADDRESSES" required:"true"`
+}
+
+type MinioConfig struct {
+	Endpoint   string `envconfig:"MINIO_ENDPOINT" required:"true"`
+	AccessKey  string `envconfig:"MINIO_ACCESS_KEY" required:"true"`
+	SecretKey  string `envconfig:"MINIO_SECRET_KEY" required:"true"`
+	PublicHost string `envconfig:"MINIO_PUBLIC_HOST" required:"true"`
 }
 
 func LoadConfig(path string) (AppConfig, error) {

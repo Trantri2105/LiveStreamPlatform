@@ -20,6 +20,7 @@ type ChannelHandler interface {
 	UpdateChannelByID() gin.HandlerFunc
 	GetChannelByID() gin.HandlerFunc
 	GetChannelBySearchText() gin.HandlerFunc
+	SetChannelAvatar() gin.HandlerFunc
 }
 
 type channelHandler struct {
@@ -33,6 +34,30 @@ func (*channelHandler) formatValidationError(err validator.FieldError) string {
 		return fmt.Sprintf("the %s field is required", err.Field())
 	default:
 		return fmt.Sprintf("validation failed for %s with tag %s.", err.Field(), err.Tag())
+	}
+}
+
+func (ch *channelHandler) SetChannelAvatar() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.GetHeader("X-User-Id")
+		fileHeader, err := c.FormFile("image")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		err = ch.channelService.SetChannelAvatar(c, fileHeader, id)
+		if err != nil {
+			if errors.Is(err, apperrors.ErrInvalidFile) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ch.logger.Error(fmt.Sprintf("failed to set avatar for channel %s", id), zap.Error(err))
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			Message: "avatar set successfully",
+		})
 	}
 }
 
@@ -65,6 +90,7 @@ func (ch *channelHandler) GetChannelBySearchText() gin.HandlerFunc {
 				ID:          channel.ID,
 				Title:       channel.Title,
 				Description: channel.Description,
+				AvatarURL:   channel.AvatarURL,
 			})
 		}
 		c.JSON(http.StatusOK, channelRes)
@@ -133,7 +159,7 @@ func (ch *channelHandler) UpdateChannelByID() gin.HandlerFunc {
 		if err != nil {
 			switch {
 			case errors.Is(err, apperrors.ErrChannelNotFound):
-				c.JSON(http.StatusConflict, response.Response{
+				c.JSON(http.StatusNotFound, response.Response{
 					Error: "channel not found",
 				})
 			default:
@@ -172,6 +198,7 @@ func (ch *channelHandler) GetChannelByID() gin.HandlerFunc {
 			ID:          channel.ID,
 			Title:       channel.Title,
 			Description: channel.Description,
+			AvatarURL:   channel.AvatarURL,
 		})
 	}
 }
