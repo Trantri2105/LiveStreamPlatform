@@ -19,41 +19,6 @@
 .hero-section p {
     font-size: 18px;
     color: #6b7280;
-    margin-bottom: 32px;
-}
-
-.search-form {
-    max-width: 600px;
-    margin: 0 auto;
-    display: flex;
-    gap: 12px;
-}
-
-.search-form .input-group {
-    flex: 1;
-    margin-bottom: 0;
-}
-
-.search-btn {
-    padding: 12px 32px;
-    background: #6366f1;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    white-space: nowrap;
-}
-
-.search-btn:hover:not(:disabled) {
-    background: #4f46e5;
-}
-
-.search-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 .streams-section {
@@ -109,14 +74,6 @@
 
     .hero-section p {
         font-size: 16px;
-    }
-
-    .search-form {
-        flex-direction: column;
-    }
-
-    .search-btn {
-        width: 100%;
     }
 
     .livestream-grid {

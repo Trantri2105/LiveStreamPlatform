@@ -25,20 +25,52 @@ class StreamService{
         }
     }
 
-    async searchStreams(searchText = '') {
+    async getStreamsByChannel(channelId){
+        try{
+            const response = await axiosInstance.get(
+                API_ENDPOINTS.STREAMS.GET_BY_CHANNEL(channelId)
+            );
+            return response.data || [];
+        } catch (error){
+            throw error.response?.data || error;
+        }
+    }
+
+    async searchStreams(params = {}) {
         try {
+            const {
+                search_text = '',
+                status = null,
+                limit = 10,
+                offset = 0,
+            } = params;
+
+            const requestData = {
+                search_text,
+                limit,
+                offset,
+            };
+            if (status) {
+                requestData.status = status;
+            }
+
             const response = await axiosInstance.post(
                 API_ENDPOINTS.STREAMS.SEARCH,
-                { search_text: searchText }
+                requestData
             );
-            return response.data;
+            return response.data || [];
         } catch (error) {
             throw error.response?.data || error;
         }
     }
 
     async getAllStreams() {
-        return this.searchStreams('');
+        return this.searchStreams({ search_text: ''});
+    }
+
+    // Get live streams only
+    async getLiveStreams() {
+        return this.searchStreams({ search_text: '', status: 'live'});
     }
 }
 

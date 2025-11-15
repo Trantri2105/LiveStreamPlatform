@@ -11,33 +11,20 @@ const ChatBox = ({ streamId }) => {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [loading, setLoading] = useState(true);
-    const [userCache, setUserCache] = useState({}); // Cache user info
     const messagesEndRef = useRef(null);
     const chatContainerRef = useRef(null);
 
     useEffect(() => {
         const loadMessages = async () => {
             try {
-                const data = await chatService.getMessages(streamId);
-
+                const data = await chatService.getMessages(streamId)
                 const sorted = data.sort((a, b) => {
                     const timeA = new Date(a.created_at).getTime();
                     const timeB = new Date(b.created_at).getTime();
                     return timeA - timeB;
                 });
-
                 setMessages(sorted);
-
-                const cache = {};
-                sorted.forEach(msg => {
-                    if (msg.user_id && !cache[msg.user_id]) {
-                        cache[msg.user_id] = {
-                            username: msg.username || null,
-                        };
-                    }
-                });
-                setUserCache(cache);
-
+                console.log("cHECK DATA  ", data)
             } catch (error) {
                 console.error('Error loading messages:', error);
             } finally {
@@ -53,11 +40,10 @@ const ChatBox = ({ streamId }) => {
 
         setMessages((prevMessages) => {
             const formattedMessage = {
-                id: Date.now(), // Temporary ID
+                id: Date.now(),
                 stream_id: streamId,
                 user_id: message.user_id,
                 content: message.content,
-                // Timestamp từ WS thường là epoch seconds, chuyển sang ISO string
                 created_at: new Date(message.timestamp * 1000).toISOString(),
                 username: message.username || null, // Nếu WS đã trả username
             };
@@ -69,20 +55,6 @@ const ChatBox = ({ streamId }) => {
     }, [streamId]);
 
     const { isConnected, error, sendMessage } = useWebSocket(streamId, handleNewMessage);
-
-    useEffect(() => {
-        const lastMessage = messages[messages.length - 1];
-        if (lastMessage && lastMessage.user_id && !userCache[lastMessage.user_id]) {
-            const username = lastMessage.username || (lastMessage.user_id === user?.id ? `${user.first_name} ${user.last_name}`.trim() : null);
-
-            if (username) {
-                setUserCache(prev => ({
-                    ...prev,
-                    [lastMessage.user_id]: { username: username }
-                }));
-            }
-        }
-    }, [messages, user, userCache]);
 
     useEffect(() => {
         scrollToBottom();
@@ -110,18 +82,6 @@ const ChatBox = ({ streamId }) => {
             handleSubmit(e);
         }
     };
-
-    const getDisplayUsername = useCallback((message) => {
-        if (message.user_id === user?.id) {
-            return `${user.first_name} ${user.last_name}`.trim() || 'You';
-        }
-
-        if (userCache[message.user_id]?.username) {
-            return userCache[message.user_id].username;
-        }
-
-        return `User ${message.user_id ? message.user_id.slice(0, 8) : 'Unknown'}...`;
-    }, [user, userCache]);
 
     if (loading) {
         return (
@@ -158,13 +118,10 @@ const ChatBox = ({ streamId }) => {
                         <p>No messages yet. Be the first to chat!</p>
                     </div>
                 ) : (
-                    messages.map((message, index) => (
+                    messages.map((message) => (
                         <ChatMessage
-                            key={message.id || index}
-                            message={{
-                                ...message,
-                                username: getDisplayUsername(message),
-                            }}
+                            key={message.id}
+                            message={message}
                             isOwnMessage={message.user_id === user?.id}
                         />
                     ))

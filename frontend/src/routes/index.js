@@ -10,6 +10,8 @@ import CreateStreamPage from '../pages/Livestream/CreateStreamPage/CreateStreamP
 import StreamSetupPage from '../pages/Livestream/StreamSetupPage/StreamSetupPage';
 import StreamViewPage from '../pages/Livestream/StreamViewPage/StreamViewPage';
 
+import SearchPage from '../pages/Search/SearchPage/SearchPage';
+
 import ProfilePage from '../pages/Profile/ProfilePage/ProfilePage';
 import EditProfilePage from '../pages/Profile/EditProfilePage/EditProfilePage';
 import ChangePasswordPage from '../pages/Profile/ChangePasswordPage/ChangePasswordPage';
@@ -17,6 +19,7 @@ import ChangePasswordPage from '../pages/Profile/ChangePasswordPage/ChangePasswo
 import CreateChannelPage from '../pages/Channel/CreateChannelPage/CreateChannelPage';
 import MyChannelPage from '../pages/Channel/MyChannelPage/MyChannelPage';
 import EditChannelPage from '../pages/Channel/EditChannelPage/EditChannelPage';
+import ChannelDetailPage from "../pages/Channel/ChannelDetailPage/ChannelDetailPage";
 
 import UsersPage from '../pages/Admin/UsersPage/UsersPage';
 import UserDetailPage from '../pages/Admin/UserDetailPage/UserDetailPage';
@@ -114,6 +117,15 @@ const AppRoutes = () => {
                 />
 
                 <Route
+                    path="/search"
+                    element={
+                        <ChannelRequiredRoute>
+                            <SearchPage />
+                        </ChannelRequiredRoute>
+                    }
+                />
+
+                <Route
                     path="/create-stream"
                     element={
                         <ChannelRequiredRoute>
@@ -176,6 +188,15 @@ const AppRoutes = () => {
                     element={
                         <ChannelRequiredRoute>
                             <EditChannelPage />
+                        </ChannelRequiredRoute>
+                    }
+                />
+
+                <Route
+                    path="/channel/:channelId"
+                    element={
+                        <ChannelRequiredRoute>
+                            <ChannelDetailPage />
                         </ChannelRequiredRoute>
                     }
                 />

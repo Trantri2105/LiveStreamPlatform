@@ -1,76 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Input from '../../../common/Input/Input';
 import TextArea from '../../../common/TextArea/TextArea';
 import Button from '../../../common/Button/Button';
 import streamService from '../../../../services/streamService';
+import categoryService from '../../../../services/categoryService';
 import './CreateStreamForm.css';
 
 const CreateStreamForm = () => {
     const navigate = useNavigate();
 
+    const [categories, setCategories] = useState([]);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        category_id: '1', // Default category
+        category_id: '',
     });
 
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
+    const [loadingCategories, setLoadingCategories] = useState(true);
     const [message, setMessage] = useState({ type: '', text: '' });
 
-    const categories = [
-        { id: '1', title: 'League of Legends' },
-        { id: '2', title: 'Valorant' },
-        { id: '3', title: 'Counter-Strike 2' },
-        { id: '4', title: 'Dota 2' },
-        { id: '5', title: 'PUBG: Battlegrounds' },
-        { id: '6', title: 'Fortnite' },
-        { id: '7', title: 'Apex Legends' },
-        { id: '8', title: 'Call of Duty: Warzone' },
-        { id: '9', title: 'Minecraft' },
-        { id: '10', title: 'Roblox' },
-        { id: '11', title: 'Genshin Impact' },
-        { id: '12', title: 'Mobile Legends: Bang Bang' },
-        { id: '13', title: 'Free Fire' },
-        { id: '14', title: 'Among Us' },
-        { id: '15', title: 'Grand Theft Auto V (GTA V)' },
-        { id: '16', title: 'Red Dead Redemption 2' },
-        { id: '17', title: 'FIFA 24' },
-        { id: '18', title: 'EA Sports FC 24' },
-        { id: '19', title: 'Rocket League' },
-        { id: '20', title: 'Overwatch 2' },
-        { id: '21', title: 'Destiny 2' },
-        { id: '22', title: 'Elden Ring' },
-        { id: '23', title: 'Baldur’s Gate 3' },
-        { id: '24', title: 'Rust' },
-        { id: '25', title: 'ARK: Survival Evolved' },
-        { id: '26', title: 'Cyberpunk 2077' },
-        { id: '27', title: 'Honkai: Star Rail' },
-        { id: '28', title: 'The Sims 4' },
-        { id: '29', title: 'Dead by Daylight' },
-        { id: '30', title: 'Phasmophobia' },
-        { id: '31', title: 'Just Chatting' },
-        { id: '32', title: 'Music' },
-        { id: '33', title: 'Talk Shows & Podcasts' },
-        { id: '34', title: 'ASMR' },
-        { id: '35', title: 'Art' },
-        { id: '36', title: 'Science & Technology' },
-        { id: '37', title: 'Cooking' },
-        { id: '38', title: 'Travel & Outdoors' },
-        { id: '39', title: 'Fitness & Health' },
-        { id: '40', title: 'Education' },
-        { id: '41', title: 'Creative Arts' },
-        { id: '42', title: 'Esports' },
-        { id: '43', title: 'IRL (In Real Life)' },
-        { id: '44', title: 'Board Games' },
-        { id: '45', title: 'Virtual Reality (VR)' },
-        { id: '46', title: 'Retro Gaming' },
-        { id: '47', title: 'Indie Games' },
-        { id: '48', title: 'Simulation Games' },
-        { id: '49', title: 'Speedrunning' },
-        { id: '50', title: 'Charity Streams' }
-    ];
+    // Load categories từ API
+    useEffect(() => {
+        loadCategories();
+    }, []);
+
+    const loadCategories = async () => {
+        try {
+            const data = await categoryService.getAllCategories();
+            setCategories(data || []);
+
+            if (data && data.length > 0) {
+                setFormData(prev => ({
+                    ...prev,
+                    category_id: data[0].id,
+                }));
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            setMessage({
+                type: 'error',
+                text: 'Failed to load categories. Please refresh the page.',
+            });
+        } finally {
+            setLoadingCategories(false);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -138,7 +115,9 @@ const CreateStreamForm = () => {
                 text: 'Stream created successfully! Redirecting to stream setup...',
             });
 
-            sessionStorage.setItem(`stream_key_${response.id}`, response.stream_key);
+            if (response.stream_key) {
+                sessionStorage.setItem(`stream_key_${response.id}`, response.stream_key);
+            }
 
             setTimeout(() => {
                 navigate(`/stream/${response.id}/setup`, {
@@ -158,6 +137,14 @@ const CreateStreamForm = () => {
             setLoading(false);
         }
     };
+
+    if (loadingCategories) {
+        return (
+            <div className="create-stream-form">
+                <div className="loading-message">Loading categories...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="create-stream-form">
@@ -191,12 +178,15 @@ const CreateStreamForm = () => {
                         onChange={handleChange}
                         className={`select-field ${errors.category_id ? 'select-error' : ''}`}
                     >
-                        <option value="">Select a category</option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                                {category.title}
-                            </option>
-                        ))}
+                        {categories.length === 0 ? (
+                            <option value="">No categories available</option>
+                        ) : (
+                            categories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.title}
+                                </option>
+                            ))
+                        )}
                     </select>
                     {errors.category_id && (
                         <span className="input-error-message">{errors.category_id}</span>
@@ -227,6 +217,7 @@ const CreateStreamForm = () => {
                         type="submit"
                         variant="primary"
                         loading={loading}
+                        disabled={categories.length === 0}
                     >
                         Create Stream
                     </Button>

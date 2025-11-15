@@ -1,57 +1,7 @@
-.my-channel-page {
+.channel-detail-page {
     padding: 24px;
     max-width: 1400px;
     margin: 0 auto;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-}
-
-.page-header h1 {
-    font-size: 32px;
-    font-weight: 700;
-    color: #111827;
-}
-
-.header-actions {
-    display: flex;
-    gap: 12px;
-}
-
-.message-alert {
-    padding: 16px 24px;
-    border-radius: 12px;
-    margin-bottom: 24px;
-    font-size: 14px;
-    font-weight: 600;
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.message-success {
-    background: #d1fae5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
-}
-
-.message-error {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
 }
 
 .channel-streams-section {
@@ -95,7 +45,6 @@
 .empty-streams p {
     font-size: 16px;
     color: #6b7280;
-    margin-bottom: 32px;
 }
 
 .error-page {
@@ -131,27 +80,8 @@
 }
 
 @media (max-width: 768px) {
-    .my-channel-page {
+    .channel-detail-page {
         padding: 16px;
-    }
-
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-    }
-
-    .page-header h1 {
-        font-size: 24px;
-    }
-
-    .header-actions {
-        width: 100%;
-        flex-direction: column;
-    }
-
-    .header-actions button {
-        width: 100%;
     }
 
     .streams-grid {

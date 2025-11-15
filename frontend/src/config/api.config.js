@@ -20,15 +20,22 @@ export const API_ENDPOINTS = {
         CREATE: '/channels',
         UPDATE: '/channels/self',
         GET_BY_ID: (channelId) => `/public/channels/${channelId}`,
+        SEARCH: '/public/channels/search',
+        SET_AVATAR: '/channels/self/avatar',
     },
     STREAMS: {
         CREATE: '/streams',
         GET_BY_ID: (streamId) => `/public/streams/${streamId}`,
+        GET_BY_CHANNEL: (channelId) =>  `/public/streams/channels/${channelId}`,
         SEARCH: '/public/streams/search',
     },
     CHAT: {
         GET_MESSAGES: (streamId) => `${CHAT_API_BASE_URL}/api/chat/thread/${streamId}/messages`,
         WS_CONNECT: (streamId) => `${WS_BASE_CHAT_URL}/ws/chat/${streamId}`,
+    },
+    CATEGORIES: {
+        GET_BY_ID: (categoryId) => `/public/categories/${categoryId}`,
+        SEARCH: '/public/categories/search',
     }
 };
 

@@ -1,103 +1,110 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
 import useChannel from '../../../hooks/useChannel';
+import ChannelAvatar from '../../common/ChannelAvatar/ChannelAvatar'
 import './Header.css';
 
 const Header = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, logout, isAuthenticated, isAdmin } = useAuth();
     const { channel, hasChannel } = useChannel();
+    const [searchValue, setSearchValue] = useState('');
 
     const handleLogout = async () => {
         await logout();
         navigate('/login');
     };
 
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchValue.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+        }
+    };
+
     return (
         <header className="header">
             <div className="header-container">
                 <div className="header-logo" onClick={() => navigate('/')}>
-                    <h2>🎥 Livestream App</h2>
+                    <h2>🎥 Livestream</h2>
                 </div>
 
-                <div className="header-search">
-                    <input
-                        type="text"
-                        placeholder="Search streams..."
-                        className="search-input"
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                // Handle search
-                                console.log('Search:', e.target.value);
-                            }
-                        }}
-                    />
-                    <button className="search-button">🔍</button>
-                </div>
+                {isAuthenticated && !location.pathname.startsWith('/search') && (
+                    <form className="header-search" onSubmit={handleSearch}>
+                        <input
+                            type="text"
+                            placeholder="Search streams..."
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
+                        />
+                        <button type="submit">🔍</button>
+                    </form>
+                )}
 
                 <div className="header-actions">
                     {isAuthenticated ? (
                         <>
-                            {hasChannel && !isAdmin() && channel && (
-                                <div className="channel-badge" title={channel.title}>
-                                    📺 {channel.title.length > 20
-                                    ? channel.title.substring(0, 20) + '...'
-                                    : channel.title}
-                                </div>
-                            )}
-
                             {hasChannel && !isAdmin() && (
                                 <button
-                                    className="btn-create-stream"
+                                    className="btn-live"
                                     onClick={() => navigate('/create-stream')}
                                 >
-                                    ➕ Go Live
+                                    🔴 Go Live
                                 </button>
                             )}
 
                             <div className="user-menu">
-                                <button className="user-avatar">
-                                    {user?.first_name?.charAt(0) || '👤'}
-                                </button>
+                                {hasChannel && channel ? (
+                                    <button className="user-avatar-btn">
+                                        <ChannelAvatar
+                                            avatarUrl={channel.avatar_url}
+                                            channelName={channel.title}
+                                            size="small"
+                                        />
+                                    </button>
+                                ) : (
+                                    <button className="user-avatar">
+                                        {user?.first_name?.charAt(0) || '👤'}
+                                    </button>
+                                )}
 
                                 <div className="user-dropdown">
-                                    <div className="dropdown-header">
-                                        <div className="dropdown-user-info">
-                                            <strong>{user?.first_name} {user?.last_name}</strong>
-                                            <span>{user?.email}</span>
-                                        </div>
+                                    <div className="user-info">
+                                        <strong>{user?.first_name} {user?.last_name}</strong>
+                                        <span>{user?.email}</span>
                                     </div>
 
-                                    <div className="dropdown-divider"></div>
+                                    <hr />
 
-                                    <div className="dropdown-item" onClick={() => navigate('/profile')}>
+                                    <div className="menu-item" onClick={() => navigate('/profile')}>
                                         👤 Profile
                                     </div>
 
                                     {!isAdmin() && hasChannel && (
-                                        <div className="dropdown-item" onClick={() => navigate('/my-channel')}>
+                                        <div className="menu-item" onClick={() => navigate('/my-channel')}>
                                             📺 My Channel
                                         </div>
                                     )}
 
                                     {!isAdmin() && !hasChannel && (
-                                        <div className="dropdown-item" onClick={() => navigate('/create-channel')}>
+                                        <div className="menu-item" onClick={() => navigate('/create-channel')}>
                                             ➕ Create Channel
                                         </div>
                                     )}
+
                                     {isAdmin() && (
                                         <>
-                                            <div className="dropdown-divider"></div>
-                                            <div className="dropdown-section-title">Admin</div>
-                                            <div className="dropdown-item" onClick={() => navigate('/admin/users')}>
+                                            <hr />
+                                            <div className="menu-item" onClick={() => navigate('/admin/users')}>
                                                 👥 Manage Users
                                             </div>
                                         </>
                                     )}
 
-                                    <div className="dropdown-divider"></div>
-                                    <div className="dropdown-item" onClick={handleLogout}>
+                                    <hr />
+                                    <div className="menu-item" onClick={handleLogout}>
                                         🚪 Logout
                                     </div>
                                 </div>
@@ -105,16 +112,10 @@ const Header = () => {
                         </>
                     ) : (
                         <>
-                            <button
-                                className="btn-secondary"
-                                onClick={() => navigate('/login')}
-                            >
+                            <button className="btn-secondary" onClick={() => navigate('/login')}>
                                 Sign In
                             </button>
-                            <button
-                                className="btn-primary"
-                                onClick={() => navigate('/register')}
-                            >
+                            <button className="btn-primary" onClick={() => navigate('/register')}>
                                 Sign Up
                             </button>
                         </>

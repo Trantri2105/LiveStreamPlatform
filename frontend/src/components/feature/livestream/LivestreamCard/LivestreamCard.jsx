@@ -1,5 +1,6 @@
 import React from 'react';
 import './LivestreamCard.css';
+import ChannelAvatar from "../../../common/ChannelAvatar/ChannelAvatar";
 
 const LivestreamCard = ({ stream, onClick }) => {
     const getStatusBadge = () => {
@@ -13,16 +14,14 @@ const LivestreamCard = ({ stream, onClick }) => {
                 );
             case 'init':
                 return <div className="status-badge status-init">Starting Soon</div>;
-            case 'ended':
+            case 'end':
                 return <div className="status-badge status-ended">Ended</div>;
             default:
                 return null;
         }
     };
 
-    // Tạo thumbnail từ HLS URL hoặc dùng placeholder
     const getThumbnail = () => {
-        // Có thể generate thumbnail từ video hoặc dùng default
         return 'https://via.placeholder.com/400x225?text=Stream+Thumbnail';
     };
 
@@ -37,9 +36,11 @@ const LivestreamCard = ({ stream, onClick }) => {
                 <h3 className="card-title">{stream.title}</h3>
 
                 <div className="card-channel">
-                    <div className="channel-avatar">
-                        {stream.channel?.title?.charAt(0) || 'C'}
-                    </div>
+                    <ChannelAvatar
+                        avatarUrl={stream.channel?.avatar_url}
+                        channelName={stream.channel?.title}
+                        size="medium"
+                    />
                     <div className="channel-info">
                         <p className="channel-name">{stream.channel?.title || 'Unknown'}</p>
                         <p className="channel-category">{stream.category?.title || 'Uncategorized'}</p>

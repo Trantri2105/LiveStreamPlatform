@@ -1,21 +1,20 @@
 .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
     background: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 64px;
 }
 
 .header-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px;
     max-width: 1400px;
     margin: 0 auto;
-    gap: 24px;
+    padding: 0 20px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
 .header-logo {
@@ -23,62 +22,92 @@
 }
 
 .header-logo h2 {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
-    color: #6366f1;
+    color: #111;
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 8px;
-    white-space: nowrap;
 }
 
+/* Search */
 .header-search {
     flex: 1;
     max-width: 500px;
     display: flex;
-    position: relative;
+    gap: 8px;
 }
 
-.search-input {
+.header-search input {
     flex: 1;
-    padding: 10px 16px;
-    border: 2px solid #e5e7eb;
-    border-radius: 24px 0 0 24px;
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
     font-size: 14px;
-    outline: none;
 }
 
-.search-input:focus {
+.header-search input:focus {
+    outline: none;
     border-color: #6366f1;
 }
 
-.search-button {
-    padding: 10px 20px;
+.header-search button {
+    width: 36px;
+    height: 36px;
     background: #6366f1;
     color: white;
     border: none;
-    border-radius: 0 24px 24px 0;
+    border-radius: 6px;
+    font-size: 16px;
     cursor: pointer;
-    font-size: 18px;
 }
 
+.header-search button:hover {
+    background: #4f46e5;
+}
+
+/* Actions */
 .header-actions {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-left: auto;
 }
 
-.btn-primary,
-.btn-secondary,
-.btn-create-stream {
-    padding: 10px 20px;
+.btn-live {
+    padding: 8px 16px;
+    background: #ef4444;
+    color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
+}
+
+.btn-live:hover {
+    background: #dc2626;
+}
+
+.btn-secondary,
+.btn-primary {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background: white;
+    color: #374151;
+    border: 1px solid #ddd;
+}
+
+.btn-secondary:hover {
+    background: #f9fafb;
 }
 
 .btn-primary {
@@ -90,37 +119,19 @@
     background: #4f46e5;
 }
 
-.btn-secondary {
-    background: transparent;
-    color: #6366f1;
-    border: 2px solid #6366f1;
-}
-
-.btn-secondary:hover {
-    background: #f0f1ff;
-}
-
-.btn-create-stream {
-    background: #ef4444;
-    color: white;
-}
-
-.btn-create-stream:hover {
-    background: #dc2626;
-}
-
+/* User Menu */
 .user-menu {
     position: relative;
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: #6366f1;
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     border: none;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
@@ -128,108 +139,120 @@
     justify-content: center;
 }
 
+.user-avatar:hover {
+    opacity: 0.9;
+}
+
 .user-dropdown {
     position: absolute;
-    top: calc(100% + 8px);
+    top: 36px;
     right: 0;
     background: white;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    min-width: 200px;
+    min-width: 220px;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
-}
-
-.dropdown-user-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px; /* tạo khoảng cách giữa tên và email */
-    padding: 12px 16px 4px 16px;
-}
-
-.dropdown-user-info strong {
-    font-weight: 600;
-    font-size: 15px;
-    color: #111827; /* gần đen, dễ đọc */
-    line-height: 1.2;
-}
-
-.dropdown-user-info span {
-    font-size: 13px;
-    color: #6b7280; /* xám nhẹ */
-    line-height: 1.2;
-}
-
-/* optional: nhẹ nhàng tách phần header với menu items */
-.dropdown-header {
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 4px;
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
 }
 
 .user-menu:hover .user-dropdown {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    pointer-events: auto;
 }
 
-.dropdown-item {
-    padding: 12px 16px;
+.user-dropdown:hover {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.user-info {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-info strong {
+    font-size: 14px;
+    color: #111;
+}
+
+.user-info span {
+    font-size: 12px;
+    color: #666;
+}
+
+.user-dropdown hr {
+    margin: 0;
+    border: none;
+    border-top: 1px solid #eee;
+}
+
+.menu-item {
+    padding: 10px 12px;
     cursor: pointer;
     font-size: 14px;
     color: #374151;
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
-.dropdown-item:hover {
-    background: #f3f4f6;
+.menu-item:hover {
+    background: #f9fafb;
 }
 
-.dropdown-divider {
-    height: 1px;
-    background: #e5e7eb;
-    margin: 4px 0;
+.menu-item:first-of-type {
+    border-radius: 8px 8px 0 0;
 }
 
+.menu-item:last-of-type {
+    border-radius: 0 0 8px 8px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .header-search {
-        display: none;
+    .header-container {
+        gap: 12px;
     }
 
     .header-logo h2 {
-        font-size: 20px;
+        font-size: 16px;
+    }
+
+    .header-search {
+        max-width: 300px;
+    }
+
+    .btn-live {
+        padding: 6px 12px;
+        font-size: 13px;
     }
 }
 
-.dropdown-section-title {
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.channel-badge {
-    padding: 8px 16px;
-    background: #f3f4f6;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-@media (max-width: 768px) {
-    .channel-badge {
+@media (max-width: 480px) {
+    .header-search {
         display: none;
     }
+}
+
+.user-avatar-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.user-avatar-btn:hover {
+    transform: scale(1.1);
+}
+
+.dropdown-channel-name {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+    margin-top: 4px;
 }
