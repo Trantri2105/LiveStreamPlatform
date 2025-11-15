@@ -42,7 +42,6 @@ func main() {
 	} else {
 		zapLogger.Info("connected to postgres successfully")
 	}
-	db = db.Debug()
 	sqlDB, err := db.DB()
 	if err != nil {
 		zapLogger.Fatal("failed to get sql.DB from gorm:", zap.Error(err))
