@@ -153,7 +153,8 @@ func (c *channelService) SetChannelAvatar(ctx context.Context, fileHeader *multi
 
 func (c *channelService) CreateChannel(ctx context.Context, channel model.Channel) error {
 	channel.SubscriptionCount = 0
-	channel.IsLive = false
+	f := false
+	channel.IsLive = &f
 	return c.channelRepo.CreateChannel(ctx, channel)
 }
 

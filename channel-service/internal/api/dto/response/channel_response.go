@@ -6,5 +6,5 @@ type ChannelResponse struct {
 	Description       string `json:"description"`
 	AvatarURL         string `json:"avatar_url"`
 	SubscriptionCount int    `json:"subscription_count"`
-	IsLive            bool   `json:"is_live"`
+	IsLive            *bool  `json:"is_live"`
 }
