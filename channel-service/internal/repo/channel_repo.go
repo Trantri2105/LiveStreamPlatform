@@ -52,7 +52,7 @@ func (c *channelRepository) WithTransaction(tx *gorm.DB) ChannelRepository {
 }
 
 func (c *channelRepository) UpdateSubscription(ctx context.Context, subscription model.Subscription) error {
-	result := c.db.WithContext(ctx).Updates(&subscription)
+	result := c.db.WithContext(ctx).Where("channel_id = ? and follower_id = ?", subscription.ChannelID, subscription.FollowerID).Updates(&subscription)
 	if result.Error != nil {
 		return fmt.Errorf("update subscription notification: %w", result.Error)
 	}
