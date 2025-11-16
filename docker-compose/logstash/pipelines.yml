@@ -1,2 +1,6 @@
 - pipeline.id: channels-pipeline
   path.config: "/usr/share/logstash/pipeline/channel.conf"
+- pipeline.id: categories-pipeline
+  path.config: "/usr/share/logstash/pipeline/category.conf"
+- pipeline.id: streams-pipeline
+  path.config: "/usr/share/logstash/pipeline/stream.conf"

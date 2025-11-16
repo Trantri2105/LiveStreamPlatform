@@ -20,32 +20,22 @@
         "type": "keyword"
       },
       "description": {
-        "type": "keyword"
+        "type": "text"
       },
       "status": {
         "type": "keyword"
       },
-      "channel": {
-        "type": "nested",
-        "properties": {
-          "id": {
-            "type": "keyword"
-          },
-          "title": {
-            "type": "text"
-          }
-        }
+      "channel_id": {
+        "type": "keyword"
       },
-      "category": {
-        "type": "nested",
-        "properties": {
-          "id": {
-            "type": "keyword"
-          },
-          "title": {
-            "type": "text"
-          }
-        }
+      "channel_title": {
+        "type": "text"
+      },
+      "category_id": {
+        "type": "keyword"
+      },
+      "category_title": {
+        "type": "text"
       }
     }
   }

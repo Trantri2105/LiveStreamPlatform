@@ -62,6 +62,19 @@ services:
     volumes:
       - ./initdb/init_auth_service.sql:/docker-entrypoint-initdb.d/init.sql
 
+  pg-notification-service:
+    image: postgres:18rc1
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./initdb/init_notification_service.sql:/docker-entrypoint-initdb.d/init.sql
+
   pg-chat-service:
     image: postgres:latest
     environment:
@@ -138,6 +151,9 @@ services:
       MINIO_ENDPOINT: 128.199.90.123:9000
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: admin12345
+
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_TOPIC: notification-events
     depends_on:
       init-services:
         condition: service_completed_successfully
@@ -151,14 +167,41 @@ services:
       - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
       - "traefik.http.routers.public-router.middlewares=cors"
 
+  notification-service:
+    build:
+      dockerfile: ./notification-service/build/Dockerfile
+      context: ..
+    environment:
+      POSTGRES_HOST: pg-notification-service
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: notification
+
+      SERVER_PORT: 8080
+
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_GROUP_ID: notification-consumers
+      KAFKA_TOPIC: notification-events
+    depends_on:
+      pg-notification-service:
+        condition: service_healthy
+      init-services:
+        condition: service_completed_successfully
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification-router.rule=PathPrefix(`/notifications`)"
+      - "traefik.http.routers.notification-router.middlewares=cors,custom-auth"
+      - "traefik.http.services.notification-service.loadbalancer.server.port=8080"
+
   chat-service:
     build:
       dockerfile: ./chat-service/build/Dockerfile
       context: ..
     environment:
       SERVER_ADDR: ":8001"
-      JWT_SECRET: "supersecretkey1233456"                
-      CORS_ORIGINS: "http://localhost:3000"           
+      JWT_SECRET: "supersecretkey1233456"
+      CORS_ORIGINS: "http://localhost:3000"
       CORS_ALLOW_CREDENTIALS: "false"
       DB_DSN: "postgres://postgres:postgres@pg-chat-service:5432/chatdb?sslmode=disable"
     ports:
@@ -246,6 +289,8 @@ services:
     volumes:
       - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
       - ./logstash/pipeline/channel.conf:/usr/share/logstash/pipeline/channel.conf
+      - ./logstash/pipeline/stream.conf:/usr/share/logstash/pipeline/stream.conf
+      - ./logstash/pipeline/category.conf:/usr/share/logstash/pipeline/category.conf
     environment:
       - "LS_JAVA_OPTS=-Xms1g -Xmx1g"
 

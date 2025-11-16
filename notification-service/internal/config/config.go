@@ -6,18 +6,13 @@ import (
 )
 
 type AppConfig struct {
-	Server   ServerConfig
-	Postgres PostgresConfig
-	Elastic  ElasticsearchConfig
-	Minio    MinioConfig
-	Kafka    KafkaConfig
+	Server      ServerConfig
+	Postgres    PostgresConfig
+	KafkaConfig KafkaConfig
 }
 
 type ServerConfig struct {
-	Port          string `envconfig:"SERVER_PORT" default:"8080"`
-	ChatServerUrl string `envconfig:"SERVER_CHAT_SERVER_URL" required:"true"`
-	SrtServerUrl  string `envconfig:"SERVER_SRT_SERVER_URL" required:"true"`
-	HlsServerUrl  string `envconfig:"SERVER_HLS_SERVER_URL" required:"true"`
+	Port string `envconfig:"SERVER_PORT" default:"8080"`
 }
 
 type PostgresConfig struct {
@@ -28,18 +23,9 @@ type PostgresConfig struct {
 	DBName   string `envconfig:"POSTGRES_DB" required:"true"`
 }
 
-type ElasticsearchConfig struct {
-	Addresses []string `envconfig:"ELASTICSEARCH_ADDRESSES" required:"true"`
-}
-
-type MinioConfig struct {
-	Endpoint  string `envconfig:"MINIO_ENDPOINT" required:"true"`
-	AccessKey string `envconfig:"MINIO_ACCESS_KEY" required:"true"`
-	SecretKey string `envconfig:"MINIO_SECRET_KEY" required:"true"`
-}
-
 type KafkaConfig struct {
 	Brokers []string `envconfig:"KAFKA_BROKERS" required:"true"`
+	GroupID string   `envconfig:"KAFKA_GROUP_ID" required:"true"`
 	Topic   string   `envconfig:"KAFKA_TOPIC" required:"true"`
 }
 

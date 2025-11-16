@@ -6,12 +6,14 @@ import (
 )
 
 var (
-	ErrChannelNotFound      = errors.New("channel not found")
-	ErrChannelAlreadyExists = errors.New("channel already exists")
-	ErrCategoryNotFound     = errors.New("category not found")
-	ErrStreamNotFound       = errors.New("stream not found")
-	ErrInvalidFile          = errors.New("invalid file")
-	ErrMinioKeyNotFound     = errors.New("minio key not found")
+	ErrChannelNotFound           = errors.New("channel not found")
+	ErrChannelAlreadyExists      = errors.New("channel already exists")
+	ErrCategoryNotFound          = errors.New("category not found")
+	ErrStreamNotFound            = errors.New("stream not found")
+	ErrInvalidFile               = errors.New("invalid file")
+	ErrMinioKeyNotFound          = errors.New("minio key not found")
+	ErrSubscriptionAlreadyExists = errors.New("subscription already exists")
+	ErrSubscriptionNotFound      = errors.New("subscription not found")
 )
 
 type ElasticSearchError struct {

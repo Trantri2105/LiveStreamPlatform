@@ -10,11 +10,11 @@
       "description": {
         "type": "text"
       },
-      "created_at": {
-        "type": "date"
+      "subscription_count": {
+        "type": "integer"
       },
-      "updated_at": {
-        "type": "date"
+      "is_live": {
+        "type": "boolean"
       }
     }
   }

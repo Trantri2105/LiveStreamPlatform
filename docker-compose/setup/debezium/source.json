@@ -11,7 +11,7 @@
     "slot.name": "debezium_slot",
     "publication.name": "debezium_publication",
     "publication.autocreate.mode": "filtered",
-    "table.include.list": "public.channels",
+    "table.include.list": "public.channels,public.categories,public.streams",
     "topic.prefix": "channel-svc"
   }
 }

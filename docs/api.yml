@@ -488,6 +488,123 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+  /channels/subscription:
+    post:
+      tags: [ Channels ]
+      summary: Create subscription
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /channels/subscription/{channelId}:
+    patch:
+      tags: [ Channels ]
+      summary: Update subscription
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: channelId
+          required: true
+          schema:
+            type: string
+          description: Channel id (UUID)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+    delete:
+      tags: [ Channels ]
+      summary: Delete subscription
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: channelId
+          required: true
+          schema:
+            type: string
+          description: Channel id (UUID)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /channels/follower:
+    get:
+      tags: [ Channels ]
+      summary: Get channel followers
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+  /channels/following:
+    get:
+      tags: [ Channels ]
+      summary: Get following channel
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
   /public/channels/{channelId}:
     get:
       tags: [Channels]
@@ -765,6 +882,10 @@ components:
           type: string
         description:
           type: string
+        subscription_count:
+          type: integer
+        is_live:
+          type: boolean
     Category:
       type: object
       properties:
@@ -856,7 +977,6 @@ components:
           nullable: true
     StreamSearchRequest:
       type: object
-      required: [search_text]
       properties:
         search_text:
           type: string
@@ -869,5 +989,17 @@ components:
         offset:
           type: integer
           default: 0
+    CreateSubscriptionRequest:
+      type: object
+      properties:
+        channel_id:
+          type: string
+        notification_enabled:
+          type: boolean
+    UpdateSubscriptionRequest:
+      type: object
+      properties:
+        notification_enabled:
+          type: boolean
 security:
   - BearerAuth: []

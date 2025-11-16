@@ -10,6 +10,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v9"
 	"github.com/elastic/go-elasticsearch/v9/esapi"
+	"gorm.io/gorm"
 )
 
 type StreamRepository interface {
@@ -18,35 +19,27 @@ type StreamRepository interface {
 	GetStreamByChannelID(ctx context.Context, channelID string, status string, limit int, offset int) ([]model.Stream, error)
 	UpdateStreamById(ctx context.Context, stream model.Stream) error
 	GetStreamBySearchText(ctx context.Context, searchText string, status string, limit int, offset int) ([]model.Stream, error)
+	WithTransaction(tx *gorm.DB) StreamRepository
 }
 
 type streamRepository struct {
+	db *gorm.DB
 	es *elasticsearch.Client
+}
+
+func (s *streamRepository) WithTransaction(tx *gorm.DB) StreamRepository {
+	return &streamRepository{
+		db: tx,
+		es: s.es,
+	}
 }
 
 const streamsIndex = "streams"
 
 func (s *streamRepository) CreateStream(ctx context.Context, stream model.Stream) error {
-	body, err := json.Marshal(stream)
+	err := s.db.WithContext(ctx).Create(&stream).Error
 	if err != nil {
-		return fmt.Errorf("streamRepo.CreateStream err encode stream: %w", err)
-	}
-	res, err := s.es.Index(
-		streamsIndex,
-		bytes.NewReader(body),
-		s.es.Index.WithDocumentID(stream.ID),
-		s.es.Index.WithContext(ctx),
-	)
-	if err != nil {
-		return fmt.Errorf("streamRepo.CreateStream: %w", err)
-	}
-	defer res.Body.Close()
-	if res.IsError() {
-		var e EsErrorResponse
-		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
-			return fmt.Errorf("streamRepo.CreateStream: %w", err)
-		}
-		return fmt.Errorf("streamRepo.CreateStream: %w", err)
+		return fmt.Errorf("create stream: %w", err)
 	}
 	return nil
 }
@@ -86,13 +79,8 @@ func (s *streamRepository) GetStreamByChannelID(ctx context.Context, channelID s
 	must := make([]map[string]interface{}, 0, 2)
 
 	must = append(must, map[string]interface{}{
-		"nested": map[string]interface{}{
-			"path": "channel",
-			"query": map[string]interface{}{
-				"term": map[string]interface{}{
-					"channel.id": channelID,
-				},
-			},
+		"term": map[string]interface{}{
+			"channel_id": channelID,
 		},
 	})
 
@@ -156,60 +144,12 @@ func (s *streamRepository) GetStreamByChannelID(ctx context.Context, channelID s
 }
 
 func (s *streamRepository) UpdateStreamById(ctx context.Context, stream model.Stream) error {
-	doc := make(map[string]interface{})
-	if stream.Title != "" {
-		doc["title"] = stream.Title
+	res := s.db.WithContext(ctx).Updates(&stream)
+	if res.Error != nil {
+		return fmt.Errorf("streamRepo.UpdateStreamById: %w", res.Error)
 	}
-	if stream.HlsURL != "" {
-		doc["hls_url"] = stream.HlsURL
-	}
-	if stream.LiveChatURL != "" {
-		doc["live_chat_url"] = stream.LiveChatURL
-	}
-	if stream.SrtServerURL != "" {
-		doc["srt_server_url"] = stream.SrtServerURL
-	}
-	if stream.StreamKey != "" {
-		doc["stream_key"] = stream.StreamKey
-	}
-	if stream.Description != "" {
-		doc["description"] = stream.Description
-	}
-	if stream.Status != "" {
-		doc["status"] = stream.Status
-	}
-	if stream.Channel.ID != "" || stream.Channel.Title != "" {
-		doc["channel"] = stream.Channel
-	}
-	if stream.Category.ID != "" || stream.Category.Title != "" {
-		doc["category"] = stream.Category
-	}
-	if len(doc) == 0 {
-		return nil
-	}
-	body := map[string]interface{}{
-		"doc": doc,
-	}
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		return fmt.Errorf("streamRepo.UpdateStreamById: %w", err)
-	}
-	res, err := s.es.Update(
-		streamsIndex,
-		stream.ID,
-		bytes.NewReader(buf.Bytes()),
-		s.es.Update.WithContext(ctx),
-	)
-	if err != nil {
-		return fmt.Errorf("streamRepo.UpdateStreamById: %w", err)
-	}
-	defer res.Body.Close()
-	if res.IsError() {
-		var e EsErrorResponse
-		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
-			return fmt.Errorf("streamRepo.UpdateStreamById: %w", err)
-		}
-		return apperrors.NewElasticSearchError(res.StatusCode, e.Error.Type, e.Error.Reason)
+	if res.RowsAffected == 0 {
+		return apperrors.ErrStreamNotFound
 	}
 	return nil
 }
@@ -218,47 +158,17 @@ func (s *streamRepository) GetStreamBySearchText(ctx context.Context, searchText
 	must := make([]map[string]interface{}, 0, 3)
 
 	if searchText != "" {
-		should := make([]map[string]interface{}, 0, 4)
-
-		should = append(should, map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query":     searchText,
-				"fields":    []string{"title^2", "description"},
-				"fuzziness": "AUTO",
-			},
-		})
-
-		should = append(should, map[string]interface{}{
-			"nested": map[string]interface{}{
-				"path": "channel",
-				"query": map[string]interface{}{
-					"match": map[string]interface{}{
-						"channel.title": map[string]interface{}{
-							"query":     searchText,
-							"fuzziness": "AUTO",
-						},
-					},
-				},
-			},
-		})
-
-		should = append(should, map[string]interface{}{
-			"nested": map[string]interface{}{
-				"path": "category",
-				"query": map[string]interface{}{
-					"match": map[string]interface{}{
-						"category.title": map[string]interface{}{
-							"query":     searchText,
-							"fuzziness": "AUTO",
-						},
-					},
-				},
-			},
-		})
-
 		must = append(must, map[string]interface{}{
-			"bool": map[string]interface{}{
-				"should":               should,
+			"multi_match": map[string]interface{}{
+				"query": searchText,
+				"fields": []string{
+					"title^2",
+					"description",
+					"channel_title",
+					"category_title",
+				},
+				"type":                 "best_fields",
+				"fuzziness":            "AUTO",
 				"minimum_should_match": 1,
 			},
 		})
@@ -293,7 +203,6 @@ func (s *streamRepository) GetStreamBySearchText(ctx context.Context, searchText
 			},
 		}
 	}
-
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
 		return nil, fmt.Errorf("streamRepo.GetStreamBySearchText: %w", err)
@@ -330,8 +239,9 @@ func (s *streamRepository) GetStreamBySearchText(ctx context.Context, searchText
 	return streams, nil
 }
 
-func NewStreamRepository(es *elasticsearch.Client) StreamRepository {
+func NewStreamRepository(es *elasticsearch.Client, db *gorm.DB) StreamRepository {
 	return &streamRepository{
 		es: es,
+		db: db,
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -21,11 +22,217 @@ type ChannelHandler interface {
 	GetChannelByID() gin.HandlerFunc
 	GetChannelBySearchText() gin.HandlerFunc
 	SetChannelAvatar() gin.HandlerFunc
+	CreateSubscription() gin.HandlerFunc
+	DeleteSubscription() gin.HandlerFunc
+	GetChannelFollower() gin.HandlerFunc
+	GetFollowingChannel() gin.HandlerFunc
+	UpdateSubscription() gin.HandlerFunc
 }
 
 type channelHandler struct {
 	logger         *zap.Logger
 	channelService service.ChannelService
+}
+
+func (ch *channelHandler) UpdateSubscription() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req request.UpdateSubscriptionRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "invalid request body",
+			})
+			return
+		}
+		channelId := c.Param("id")
+		followerId := c.GetHeader("X-User-Id")
+		sub := model.Subscription{
+			ChannelID:           channelId,
+			FollowerID:          followerId,
+			NotificationEnabled: req.NotificationEnabled,
+		}
+		err := ch.channelService.UpdateSubscription(c, sub)
+		if err != nil {
+			if errors.Is(err, apperrors.ErrSubscriptionNotFound) {
+				c.JSON(http.StatusNotFound, response.Response{
+					Message: "subscription not found",
+				})
+			} else {
+				ch.logger.Error("error updating subscription", zap.Error(err))
+				c.JSON(http.StatusInternalServerError, response.Response{
+					Message: "internal server error",
+				})
+			}
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			Message: "subscription updated",
+		})
+	}
+}
+
+func (ch *channelHandler) CreateSubscription() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req request.CreateSubscriptionRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			var validatorError validator.ValidationErrors
+			if errors.As(err, &validatorError) {
+				c.JSON(http.StatusBadRequest, response.Response{
+					Message: ch.formatValidationError(validatorError[0]),
+				})
+			} else {
+				c.JSON(http.StatusBadRequest, response.Response{
+					Message: "invalid request body",
+				})
+			}
+			return
+		}
+
+		sub := model.Subscription{
+			ChannelID:           req.ChannelID,
+			NotificationEnabled: req.NotificationEnabled,
+			FollowerID:          c.GetHeader("X-User-Id"),
+		}
+		err := ch.channelService.CreateSubscription(c, sub)
+		if err != nil {
+			switch {
+			case errors.Is(err, apperrors.ErrSubscriptionAlreadyExists):
+				c.JSON(http.StatusConflict, response.Response{
+					Message: "subscription already exists",
+				})
+			case errors.Is(err, apperrors.ErrChannelNotFound):
+				c.JSON(http.StatusNotFound, response.Response{
+					Message: "channel not found",
+				})
+			default:
+				ch.logger.Error("error creating subscription", zap.Error(err))
+				c.JSON(http.StatusInternalServerError, response.Response{
+					Message: "internal server error",
+				})
+			}
+			return
+		}
+		c.JSON(http.StatusCreated, response.Response{
+			Message: "subscription created",
+		})
+	}
+}
+
+func (ch *channelHandler) DeleteSubscription() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		channelId := c.Param("id")
+		followerId := c.GetHeader("X-User-Id")
+		sub := model.Subscription{
+			ChannelID:  channelId,
+			FollowerID: followerId,
+		}
+		err := ch.channelService.DeleteSubscription(c, sub)
+		if err != nil {
+			ch.logger.Error("error deleting subscription", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, response.Response{
+				Message: "internal server error",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			Message: "subscription deleted",
+		})
+	}
+}
+
+func (ch *channelHandler) GetChannelFollower() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		channelId := c.GetHeader("X-User-Id")
+		offset := c.DefaultQuery("offset", "0")
+		o, err := strconv.Atoi(offset)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "Offset must be an integer",
+			})
+			return
+		}
+		limit := c.DefaultQuery("limit", "10")
+		l, err := strconv.Atoi(limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "Limit must be an integer",
+			})
+			return
+		}
+		if o < 0 {
+			o = 0
+		}
+		if l <= 0 {
+			l = 10
+		}
+		channels, err := ch.channelService.GetChannelFollower(c, channelId, l, o)
+		if err != nil {
+			ch.logger.Error("error getting follower channel", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, response.Response{
+				Message: "internal server error",
+			})
+			return
+		}
+		channelRes := make([]response.ChannelResponse, len(channels))
+		for i, channel := range channels {
+			channelRes[i] = response.ChannelResponse{
+				ID:                channel.ID,
+				Title:             channel.Title,
+				Description:       channel.Description,
+				AvatarURL:         channel.AvatarURL,
+				SubscriptionCount: channel.SubscriptionCount,
+				IsLive:            channel.IsLive,
+			}
+		}
+		c.JSON(http.StatusOK, channelRes)
+	}
+}
+
+func (ch *channelHandler) GetFollowingChannel() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		channelId := c.GetHeader("X-User-Id")
+		offset := c.DefaultQuery("offset", "0")
+		o, err := strconv.Atoi(offset)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "Offset must be an integer",
+			})
+			return
+		}
+		limit := c.DefaultQuery("limit", "10")
+		l, err := strconv.Atoi(limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "Limit must be an integer",
+			})
+			return
+		}
+		if o < 0 {
+			o = 0
+		}
+		if l <= 0 {
+			l = 10
+		}
+		channels, err := ch.channelService.GetFollowingChannel(c, channelId, l, o)
+		if err != nil {
+			ch.logger.Error("error getting following channel", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, response.Response{
+				Message: "internal server error",
+			})
+			return
+		}
+		channelRes := make([]response.ChannelResponse, len(channels))
+		for i, channel := range channels {
+			channelRes[i] = response.ChannelResponse{
+				ID:                channel.ID,
+				Title:             channel.Title,
+				Description:       channel.Description,
+				AvatarURL:         channel.AvatarURL,
+				SubscriptionCount: channel.SubscriptionCount,
+				IsLive:            channel.IsLive,
+			}
+		}
+		c.JSON(http.StatusOK, channelRes)
+	}
 }
 
 func (*channelHandler) formatValidationError(err validator.FieldError) string {
@@ -87,10 +294,12 @@ func (ch *channelHandler) GetChannelBySearchText() gin.HandlerFunc {
 		channelRes := make([]response.ChannelResponse, 0)
 		for _, channel := range channels {
 			channelRes = append(channelRes, response.ChannelResponse{
-				ID:          channel.ID,
-				Title:       channel.Title,
-				Description: channel.Description,
-				AvatarURL:   channel.AvatarURL,
+				ID:                channel.ID,
+				Title:             channel.Title,
+				Description:       channel.Description,
+				AvatarURL:         channel.AvatarURL,
+				SubscriptionCount: channel.SubscriptionCount,
+				IsLive:            channel.IsLive,
 			})
 		}
 		c.JSON(http.StatusOK, channelRes)
@@ -155,7 +364,7 @@ func (ch *channelHandler) UpdateChannelByID() gin.HandlerFunc {
 			Title:       req.Title,
 			Description: req.Description,
 		}
-		err := ch.channelService.UpdateChannelByID(c, updatedChannel)
+		err := ch.channelService.UpdateChannelByID(c, updatedChannel, nil)
 		if err != nil {
 			switch {
 			case errors.Is(err, apperrors.ErrChannelNotFound):
@@ -195,10 +404,12 @@ func (ch *channelHandler) GetChannelByID() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, response.ChannelResponse{
-			ID:          channel.ID,
-			Title:       channel.Title,
-			Description: channel.Description,
-			AvatarURL:   channel.AvatarURL,
+			ID:                channel.ID,
+			Title:             channel.Title,
+			Description:       channel.Description,
+			AvatarURL:         channel.AvatarURL,
+			SubscriptionCount: channel.SubscriptionCount,
+			IsLive:            channel.IsLive,
 		})
 	}
 }

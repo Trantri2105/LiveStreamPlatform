@@ -79,17 +79,20 @@ func main() {
 		logger.Fatal("failed to ensure bucket", zap.Error(err))
 	}
 
+	kafkaWriter := infra.NewKafkaWriter(appConfig.Kafka.Brokers, appConfig.Kafka.Topic)
+	defer kafkaWriter.Close()
 	channelRepo := repo.NewChannelRepository(db, esClient)
-	channelService := service.NewChannelService(channelRepo, logger, minioClient, appConfig.Minio.Endpoint)
+	channelService := service.NewChannelService(channelRepo, logger, minioClient, appConfig.Minio.Endpoint, kafkaWriter)
 	channelHandler := handler.NewChannelHandler(logger, channelService)
 
 	categoryRepo := repo.NewCategoryRepository(esClient)
 	categoryService := service.NewCategoryService(categoryRepo)
 	categoryHandler := handler.NewCategoryHandler(logger, categoryService)
 
-	streamRepo := repo.NewStreamRepository(esClient)
+	txManager := repo.NewTransactionManager(db)
+	streamRepo := repo.NewStreamRepository(esClient, db)
 	chatClient := client.NewChatClient(appConfig.Server.ChatServerUrl)
-	streamService := service.NewStreamService(channelService, categoryService, streamRepo, appConfig.Server.SrtServerUrl, appConfig.Server.HlsServerUrl, chatClient)
+	streamService := service.NewStreamService(channelService, categoryService, streamRepo, appConfig.Server.SrtServerUrl, appConfig.Server.HlsServerUrl, chatClient, txManager, logger)
 	streamHandler := handler.NewStreamHandler(logger, streamService)
 
 	gin.SetMode(gin.ReleaseMode)

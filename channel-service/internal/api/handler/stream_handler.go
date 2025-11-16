@@ -60,8 +60,8 @@ func (s *streamHandler) CreateStream() gin.HandlerFunc {
 			Title:       req.Title,
 			Description: req.Description,
 		}
-		stream.Category.ID = req.CategoryID
-		stream.Channel.ID = id
+		stream.CategoryID = req.CategoryID
+		stream.ChannelID = id
 
 		authHeader := c.GetHeader("Authorization")
 		token := strings.TrimPrefix(authHeader, "Bearer ")
@@ -87,15 +87,15 @@ func (s *streamHandler) CreateStream() gin.HandlerFunc {
 				ID    string `json:"id"`
 				Title string `json:"title"`
 			}{
-				ID:    newStream.Channel.ID,
-				Title: newStream.Channel.Title,
+				ID:    newStream.ChannelID,
+				Title: newStream.ChannelTitle,
 			},
 			Category: struct {
 				ID    string `json:"id"`
 				Title string `json:"title"`
 			}{
-				ID:    newStream.Category.ID,
-				Title: newStream.Category.Title,
+				ID:    newStream.CategoryID,
+				Title: newStream.CategoryTitle,
 			},
 		})
 	}
@@ -130,15 +130,15 @@ func (s *streamHandler) GetStreamByID() gin.HandlerFunc {
 				ID    string `json:"id"`
 				Title string `json:"title"`
 			}{
-				ID:    stream.Channel.ID,
-				Title: stream.Channel.Title,
+				ID:    stream.ChannelID,
+				Title: stream.ChannelTitle,
 			},
 			Category: struct {
 				ID    string `json:"id"`
 				Title string `json:"title"`
 			}{
-				ID:    stream.Category.ID,
-				Title: stream.Category.Title,
+				ID:    stream.CategoryID,
+				Title: stream.CategoryTitle,
 			},
 		})
 	}
@@ -194,15 +194,15 @@ func (s *streamHandler) GetStreamByChannelID() gin.HandlerFunc {
 					ID    string `json:"id"`
 					Title string `json:"title"`
 				}{
-					ID:    stream.Channel.ID,
-					Title: stream.Channel.Title,
+					ID:    stream.ChannelID,
+					Title: stream.ChannelTitle,
 				},
 				Category: struct {
 					ID    string `json:"id"`
 					Title string `json:"title"`
 				}{
-					ID:    stream.Category.ID,
-					Title: stream.Category.Title,
+					ID:    stream.CategoryID,
+					Title: stream.CategoryTitle,
 				},
 			})
 
@@ -248,15 +248,15 @@ func (s *streamHandler) GetStreamBySearchText() gin.HandlerFunc {
 					ID    string `json:"id"`
 					Title string `json:"title"`
 				}{
-					ID:    stream.Channel.ID,
-					Title: stream.Channel.Title,
+					ID:    stream.ChannelID,
+					Title: stream.ChannelTitle,
 				},
 				Category: struct {
 					ID    string `json:"id"`
 					Title string `json:"title"`
 				}{
-					ID:    stream.Category.ID,
-					Title: stream.Category.Title,
+					ID:    stream.CategoryID,
+					Title: stream.CategoryTitle,
 				},
 			})
 

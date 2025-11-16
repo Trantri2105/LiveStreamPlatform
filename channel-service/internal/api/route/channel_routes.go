@@ -15,4 +15,9 @@ func SetUpChannelRoutes(r *gin.Engine, h handler.ChannelHandler) {
 	privateChannelRoutes.POST("", h.CreateChannel())
 	privateChannelRoutes.PATCH("/self", h.UpdateChannelByID())
 	privateChannelRoutes.PUT("/self/avatar", h.SetChannelAvatar())
+	privateChannelRoutes.POST("/subscription", h.CreateSubscription())
+	privateChannelRoutes.DELETE("/subscription/:id", h.DeleteSubscription())
+	privateChannelRoutes.GET("/follower", h.GetChannelFollower())
+	privateChannelRoutes.GET("/following", h.GetFollowingChannel())
+	privateChannelRoutes.PATCH("/subscription/:id", h.UpdateSubscription())
 }

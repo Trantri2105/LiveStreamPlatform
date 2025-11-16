@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/elastic/go-elasticsearch/v9"
 	"github.com/elastic/go-elasticsearch/v9/esapi"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -19,11 +20,109 @@ type ChannelRepository interface {
 	UpdateChannelByID(ctx context.Context, channel model.Channel) error
 	GetChannelByID(ctx context.Context, id string) (model.Channel, error)
 	GetChannelBySearchText(ctx context.Context, searchText string, limit, offset int) ([]model.Channel, error)
+	CreateSubscription(ctx context.Context, subscription model.Subscription) error
+	DeleteSubscription(ctx context.Context, subscription model.Subscription) error
+	GetChannelFollower(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error)
+	GetFollowingChannel(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error)
+	GetLiveFollowingChannel(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error)
+	UpdateSubscription(ctx context.Context, subscription model.Subscription) error
+	WithTransaction(tx *gorm.DB) ChannelRepository
 }
 
 type channelRepository struct {
 	db *gorm.DB
 	es *elasticsearch.Client
+}
+
+func (c *channelRepository) WithTransaction(tx *gorm.DB) ChannelRepository {
+	return &channelRepository{
+		db: tx,
+		es: c.es,
+	}
+}
+
+func (c *channelRepository) UpdateSubscription(ctx context.Context, subscription model.Subscription) error {
+	result := c.db.WithContext(ctx).Updates(&subscription)
+	if result.Error != nil {
+		return fmt.Errorf("update subscription notification: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return apperrors.ErrSubscriptionNotFound
+	}
+	return nil
+}
+
+func (c *channelRepository) GetChannelFollower(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error) {
+	var channels []model.Channel
+	err := c.db.WithContext(ctx).Table("subscriptions AS s").Joins("JOIN channels ON s.follower_id = channels.id").Where("s.channel_id = ?", channelID).Select("channels.*").Limit(limit).Offset(offset).Order("channels.id DESC").Scan(&channels).Error
+	if err != nil {
+		return nil, fmt.Errorf("get channel follower: %w", err)
+	}
+	return channels, nil
+}
+
+func (c *channelRepository) GetFollowingChannel(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error) {
+	var channels []model.Channel
+	err := c.db.WithContext(ctx).Table("subscriptions AS s").Joins("JOIN channels ON s.channel_id = channels.id").Where("s.follower_id = ?", channelID).Select("channels.*").Limit(limit).Offset(offset).Order("channels.id DESC").Scan(&channels).Error
+	if err != nil {
+		return nil, fmt.Errorf("get following channel: %w", err)
+	}
+	return channels, nil
+}
+
+func (c *channelRepository) GetLiveFollowingChannel(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error) {
+	var channels []model.Channel
+	err := c.db.WithContext(ctx).Table("subscriptions AS s").Joins("JOIN channels ON s.channel_id = channels.id").Where("s.follower_id = ? AND channels.is_live = ?", channelID, true).Select("channels.*").Limit(limit).Offset(offset).Order("channels.id DESC").Scan(&channels).Error
+	if err != nil {
+		return nil, fmt.Errorf("get following live channel: %w", err)
+	}
+	return channels, nil
+}
+
+func (c *channelRepository) CreateSubscription(ctx context.Context, subscription model.Subscription) error {
+	err := c.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := c.db.Create(&subscription)
+		if res.Error != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(res.Error, &pgErr) && pgErr.Code == "23505" {
+				if pgErr.ConstraintName == "subscriptions_pkey" {
+					return apperrors.ErrSubscriptionAlreadyExists
+				} else {
+					return apperrors.ErrChannelNotFound
+				}
+			}
+			return fmt.Errorf("channelRepository.CreateSubscription: %w", res.Error)
+		}
+		res = c.db.Exec("UPDATE channels SET subscription_count = subscription_count + 1 WHERE id = ?", subscription.ChannelID)
+		if res.Error != nil {
+			if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+				return apperrors.ErrChannelNotFound
+			}
+			return fmt.Errorf("channelRepository.CreateSubscription: %w", res.Error)
+		}
+		return nil
+	})
+	return err
+}
+
+func (c *channelRepository) DeleteSubscription(ctx context.Context, subscription model.Subscription) error {
+	err := c.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := c.db.Where("channel_id = ? and follower_id = ?", subscription.ChannelID, subscription.FollowerID).Delete(&model.Subscription{})
+		if res.Error != nil {
+			return fmt.Errorf("channelRepository.DeleteSubscription: %w", res.Error)
+		}
+		if res.RowsAffected > 0 {
+			res = c.db.Exec("UPDATE channels SET subscription_count = subscription_count - 1 WHERE id = ?", subscription.ChannelID)
+			if res.Error != nil {
+				if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+					return apperrors.ErrChannelNotFound
+				}
+				return fmt.Errorf("channelRepository.CreateSubscription: %w", res.Error)
+			}
+		}
+		return nil
+	})
+	return err
 }
 
 const channelsIndex = "channels"
