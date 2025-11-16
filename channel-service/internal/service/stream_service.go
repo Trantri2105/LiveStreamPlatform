@@ -48,9 +48,10 @@ func (s *streamService) HandleOVMNotify(ctx context.Context, request request.OVM
 			if e != nil {
 				return e
 			}
+			f := false
 			channel := model.Channel{
 				ID:     stream.ChannelID,
-				IsLive: false,
+				IsLive: &f,
 			}
 			e = s.channelService.UpdateChannelByID(ctx, channel, tx)
 			if e != nil {
@@ -75,9 +76,10 @@ func (s *streamService) HandleOVMNotify(ctx context.Context, request request.OVM
 		if e != nil {
 			return e
 		}
+		t := true
 		channel := model.Channel{
 			ID:     stream.ChannelID,
-			IsLive: true,
+			IsLive: &t,
 		}
 		e = s.channelService.UpdateChannelByID(ctx, channel, tx)
 		if e != nil {
