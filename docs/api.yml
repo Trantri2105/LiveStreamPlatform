@@ -16,6 +16,7 @@ tags:
     description: Users management operations
   - name: Categories
   - name: Streams
+  - name: Notifications
 
 paths:
   /auth/register:
@@ -777,6 +778,51 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/GetStream'
+  /notifications:
+    get:
+      tags: [ Notifications ]
+      summary: Get notifications
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+  /notifications/read:
+    put:
+      tags: [ Notifications ]
+      summary: Mark notifications as read
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadNotificationReq'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
 components:
   securitySchemes:
     BearerAuth:
@@ -1000,6 +1046,33 @@ components:
       type: object
       properties:
         notification_enabled:
+          type: boolean
+    ReadNotificationReq:
+      type: object
+      properties:
+        notification_ids:
+          type: string
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        channel_id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          properties:
+            channel_id:
+              type: string
+            stream_id:
+              type: string
+        is_read:
           type: boolean
 security:
   - BearerAuth: []
