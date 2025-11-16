@@ -68,7 +68,7 @@ func main() {
 		}
 	}()
 
-	c := consumer.NewNotificationConsumer(logger, kafkaReader)
+	c := consumer.NewNotificationConsumer(logger, kafkaReader, notifService)
 	c.Start()
 
 	quit := make(chan os.Signal, 1)

@@ -72,9 +72,10 @@ func (n *notificationConsumer) Stop() {
 	n.kafkaReader.Close()
 }
 
-func NewNotificationConsumer(logger *zap.Logger, kafkaReader *kafka.Reader) NotificationConsumer {
+func NewNotificationConsumer(logger *zap.Logger, kafkaReader *kafka.Reader, notificationService service.NotificationService) NotificationConsumer {
 	return &notificationConsumer{
-		kafkaReader: kafkaReader,
-		logger:      logger,
+		kafkaReader:         kafkaReader,
+		logger:              logger,
+		notificationService: notificationService,
 	}
 }
