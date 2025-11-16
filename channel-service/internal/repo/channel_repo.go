@@ -27,11 +27,21 @@ type ChannelRepository interface {
 	GetLiveFollowingChannel(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error)
 	UpdateSubscription(ctx context.Context, subscription model.Subscription) error
 	WithTransaction(tx *gorm.DB) ChannelRepository
+	GetChannelNotifyFollower(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error)
 }
 
 type channelRepository struct {
 	db *gorm.DB
 	es *elasticsearch.Client
+}
+
+func (c *channelRepository) GetChannelNotifyFollower(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error) {
+	var channels []model.Channel
+	err := c.db.WithContext(ctx).Table("subscriptions AS s").Joins("JOIN channels ON s.follower_id = channels.id").Where("s.channel_id = ? and s.notification_enabled = ?", channelID, true).Select("channels.*").Limit(limit).Offset(offset).Order("channels.id DESC").Scan(&channels).Error
+	if err != nil {
+		return nil, fmt.Errorf("get channel follower: %w", err)
+	}
+	return channels, nil
 }
 
 func (c *channelRepository) WithTransaction(tx *gorm.DB) ChannelRepository {

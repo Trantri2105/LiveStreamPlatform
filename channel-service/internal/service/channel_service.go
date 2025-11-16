@@ -59,7 +59,7 @@ func (c *channelService) NotifyLiveStream(stream model.Stream) error {
 	batchSize := 10000
 	for {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-		channels, err := c.GetChannelFollower(ctx, channelID, batchSize, currentOffset)
+		channels, err := c.channelRepo.GetChannelNotifyFollower(ctx, channelID, batchSize, currentOffset)
 		cancel()
 		if err != nil {
 			return err
