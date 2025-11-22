@@ -28,11 +28,24 @@ type ChannelRepository interface {
 	UpdateSubscription(ctx context.Context, subscription model.Subscription) error
 	WithTransaction(tx *gorm.DB) ChannelRepository
 	GetChannelNotifyFollower(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error)
+	GetSubscriptionByChannelID(ctx context.Context, channelID string, followerID string) (model.Subscription, error)
 }
 
 type channelRepository struct {
 	db *gorm.DB
 	es *elasticsearch.Client
+}
+
+func (c *channelRepository) GetSubscriptionByChannelID(ctx context.Context, channelID string, followerID string) (model.Subscription, error) {
+	var subscription model.Subscription
+	err := c.db.WithContext(ctx).First(&subscription, "channel_id = ? AND follower_id = ?", channelID, followerID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return model.Subscription{}, apperrors.ErrSubscriptionNotFound
+		}
+		return model.Subscription{}, err
+	}
+	return subscription, nil
 }
 
 func (c *channelRepository) GetChannelNotifyFollower(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error) {

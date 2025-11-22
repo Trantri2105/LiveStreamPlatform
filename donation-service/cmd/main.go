@@ -2,17 +2,18 @@ package main
 
 import (
 	"context"
+	"donation-service/internal/api/handler"
+	"donation-service/internal/api/route"
+	"donation-service/internal/config"
+	"donation-service/internal/consumer"
+	"donation-service/internal/infra"
+	"donation-service/internal/repo"
+	"donation-service/internal/service"
+	vnpay_client "donation-service/internal/vnpay-client"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"notification-service/internal/api/handler"
-	"notification-service/internal/api/routes"
-	"notification-service/internal/config"
-	"notification-service/internal/consumer"
-	"notification-service/internal/infra"
-	"notification-service/internal/repo"
-	"notification-service/internal/service"
 	"os"
 	"os/signal"
 	"syscall"
@@ -54,16 +55,20 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	kafkaReader := infra.NewKafkaReader(appConfig.KafkaConfig)
+	kafkaReader := infra.NewKafkaReader(appConfig.Kafka.Brokers, appConfig.Kafka.ChannelTopic, appConfig.Kafka.ChannelConsumerGroup)
+	kafkaWriter := infra.NewKafkaWriter(appConfig.Kafka.Brokers, appConfig.Kafka.PublishDonateTopic)
 
-	notifRepo := repo.NewNotificationRepo(db)
-	notifService := service.NewNotificationService(notifRepo)
-	notifHandler := handler.NewNotificationHandler(logger, notifService)
+	donationRepo := repo.NewDonationRepository(db)
+	txManager := repo.NewTransactionManager(db)
 
+	vnPayClient := vnpay_client.NewVNPayClient(appConfig.VNPay.TmnCode, appConfig.VNPay.HashSecret, appConfig.VNPay.PayURL, appConfig.VNPay.ReturnURL)
+	donationService := service.NewDonationService(txManager, kafkaWriter, donationRepo, vnPayClient, logger)
+
+	donationHandler := handler.NewDonationHandler(donationService, appConfig.Server.FrontendRedirectURL, logger)
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	routes.SetUpNotificationRoutes(r, notifHandler)
+	route.SetUpDonationRoutes(r, donationHandler)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", appConfig.Server.Port),
@@ -76,7 +81,7 @@ func main() {
 		}
 	}()
 
-	c := consumer.NewNotificationConsumer(logger, kafkaReader, notifService)
+	c := consumer.NewChannelConsumer(kafkaReader, donationService, logger)
 	c.Start()
 
 	quit := make(chan os.Signal, 1)

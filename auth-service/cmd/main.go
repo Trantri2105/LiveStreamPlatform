@@ -21,7 +21,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+func NewLogger() *zap.Logger {
+	encodeConfig := zap.NewProductionConfig()
+	encodeConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	encodeConfig.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	encodeConfig.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+
+	core := zapcore.NewCore(zapcore.NewJSONEncoder(encodeConfig.EncoderConfig), zapcore.AddSync(os.Stdout), zap.InfoLevel)
+	return zap.New(core, zap.AddCaller())
+}
 
 func main() {
 	appConfig, err := config.LoadConfig("./.env")
@@ -29,10 +40,7 @@ func main() {
 		log.Fatal(fmt.Sprintf("load config error: %v", err))
 	}
 
-	zapLogger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatal(fmt.Sprintf("create zap logger error: %v", err))
-	}
+	zapLogger := NewLogger()
 	defer zapLogger.Sync()
 
 	//set up database

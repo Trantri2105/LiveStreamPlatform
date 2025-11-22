@@ -29,11 +29,11 @@ func (ca *categoryHandler) GetCategoryByID() gin.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, apperrors.ErrCategoryNotFound) {
 				c.JSON(http.StatusNotFound, response.Response{
-					Error: "category not found",
+					Message: "category not found",
 				})
 			} else {
 				c.JSON(http.StatusInternalServerError, response.Response{
-					Error: "internal server error",
+					Message: "internal server error",
 				})
 			}
 			return
@@ -50,7 +50,7 @@ func (ca *categoryHandler) GetCategoryBySearchText() gin.HandlerFunc {
 		var req request.SearchRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, response.Response{
-				Error: "invalid request body",
+				Message: "invalid request body",
 			})
 			return
 		}
@@ -64,7 +64,7 @@ func (ca *categoryHandler) GetCategoryBySearchText() gin.HandlerFunc {
 		if err != nil {
 			ca.logger.Error(err.Error())
 			c.JSON(http.StatusInternalServerError, response.Response{
-				Error: "internal server error",
+				Message: "internal server error",
 			})
 			return
 		}

@@ -21,6 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func EnsureBucket(client *minio.Client, bucketName string) error {
@@ -39,16 +40,23 @@ func EnsureBucket(client *minio.Client, bucketName string) error {
 	return nil
 }
 
+func NewLogger() *zap.Logger {
+	encodeConfig := zap.NewProductionConfig()
+	encodeConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	encodeConfig.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	encodeConfig.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+
+	core := zapcore.NewCore(zapcore.NewJSONEncoder(encodeConfig.EncoderConfig), zapcore.AddSync(os.Stdout), zap.InfoLevel)
+	return zap.New(core, zap.AddCaller())
+}
+
 func main() {
 	appConfig, err := config.LoadConfig("./.env")
 	if err != nil {
 		log.Fatal(fmt.Sprintf("load config error: %v", err))
 	}
 
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatal(fmt.Sprintf("create zap logger error: %v", err))
-	}
+	logger := NewLogger()
 	defer logger.Sync()
 
 	db, err := infra.NewPostgresConnection(appConfig.Postgres)

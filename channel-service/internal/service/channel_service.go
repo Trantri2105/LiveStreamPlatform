@@ -34,6 +34,7 @@ type ChannelService interface {
 	GetLiveFollowingChannel(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error)
 	UpdateSubscription(ctx context.Context, subscription model.Subscription) error
 	NotifyLiveStream(stream model.Stream) error
+	GetSubscriptionByChannelID(ctx context.Context, channelID string, followerID string) (model.Subscription, error)
 }
 
 type channelService struct {
@@ -42,6 +43,10 @@ type channelService struct {
 	logger        *zap.Logger
 	kafkaWriter   *kafka.Writer
 	minioEndpoint string
+}
+
+func (c *channelService) GetSubscriptionByChannelID(ctx context.Context, channelID string, followerID string) (model.Subscription, error) {
+	return c.channelRepo.GetSubscriptionByChannelID(ctx, channelID, followerID)
 }
 
 type Notification struct {

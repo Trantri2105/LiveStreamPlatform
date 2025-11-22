@@ -108,12 +108,12 @@ func (s *streamHandler) GetStreamByID() gin.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, apperrors.ErrStreamNotFound) {
 				c.JSON(http.StatusNotFound, response.Response{
-					Error: "stream not found",
+					Message: "stream not found",
 				})
 			} else {
 				s.logger.Error("get stream failed", zap.String("id", id), zap.Error(err))
 				c.JSON(http.StatusInternalServerError, response.Response{
-					Error: "internal server error",
+					Message: "internal server error",
 				})
 			}
 			return
@@ -154,14 +154,14 @@ func (s *streamHandler) GetStreamByChannelID() gin.HandlerFunc {
 		limitInt, err := strconv.Atoi(limit)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, response.Response{
-				Error: "invalid limit",
+				Message: "invalid limit",
 			})
 			return
 		}
 		offsetInt, err := strconv.Atoi(offset)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, response.Response{
-				Error: "invalid offset",
+				Message: "invalid offset",
 			})
 		}
 
@@ -176,7 +176,7 @@ func (s *streamHandler) GetStreamByChannelID() gin.HandlerFunc {
 		if err != nil {
 			s.logger.Error("get stream by channel id failed", zap.Error(err))
 			c.JSON(http.StatusInternalServerError, response.Response{
-				Error: "internal server error",
+				Message: "internal server error",
 			})
 			return
 		}
@@ -216,7 +216,7 @@ func (s *streamHandler) GetStreamBySearchText() gin.HandlerFunc {
 		var req request.StreamSearchRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, response.Response{
-				Error: "invalid body",
+				Message: "invalid body",
 			})
 			return
 		}
@@ -230,7 +230,7 @@ func (s *streamHandler) GetStreamBySearchText() gin.HandlerFunc {
 		if err != nil {
 			s.logger.Error("get stream by search text failed", zap.Error(err))
 			c.JSON(http.StatusInternalServerError, response.Response{
-				Error: "internal server error",
+				Message: "internal server error",
 			})
 			return
 		}

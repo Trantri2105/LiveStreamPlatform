@@ -27,11 +27,33 @@ type ChannelHandler interface {
 	GetChannelFollower() gin.HandlerFunc
 	GetFollowingChannel() gin.HandlerFunc
 	UpdateSubscription() gin.HandlerFunc
+	GetSubscriptionByChannelID() gin.HandlerFunc
 }
 
 type channelHandler struct {
 	logger         *zap.Logger
 	channelService service.ChannelService
+}
+
+func (ch *channelHandler) GetSubscriptionByChannelID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		channelID := c.Param("id")
+		followerID := c.GetHeader("X-User-Id")
+		subscription, err := ch.channelService.GetSubscriptionByChannelID(c, channelID, followerID)
+		if err != nil {
+			if errors.Is(err, apperrors.ErrSubscriptionNotFound) {
+				c.JSON(http.StatusNotFound, response.Response{
+					Message: "subscription not found",
+				})
+				return
+			}
+		}
+		c.JSON(http.StatusOK, response.SubscriptionResponse{
+			ChannelID:           subscription.ChannelID,
+			FollowerID:          subscription.FollowerID,
+			NotificationEnabled: subscription.NotificationEnabled,
+		})
+	}
 }
 
 func (ch *channelHandler) UpdateSubscription() gin.HandlerFunc {
@@ -287,7 +309,7 @@ func (ch *channelHandler) GetChannelBySearchText() gin.HandlerFunc {
 		if err != nil {
 			ch.logger.Error(err.Error())
 			c.JSON(http.StatusInternalServerError, response.Response{
-				Error: "internal server error",
+				Message: "internal server error",
 			})
 			return
 		}
@@ -333,12 +355,12 @@ func (ch *channelHandler) CreateChannel() gin.HandlerFunc {
 			switch {
 			case errors.Is(err, apperrors.ErrChannelAlreadyExists):
 				c.JSON(http.StatusConflict, response.Response{
-					Error: "channel already exists",
+					Message: "channel already exists",
 				})
 			default:
 				ch.logger.Error(err.Error())
 				c.JSON(http.StatusInternalServerError, response.Response{
-					Error: "internal server error",
+					Message: "internal server error",
 				})
 			}
 			return
@@ -369,12 +391,12 @@ func (ch *channelHandler) UpdateChannelByID() gin.HandlerFunc {
 			switch {
 			case errors.Is(err, apperrors.ErrChannelNotFound):
 				c.JSON(http.StatusNotFound, response.Response{
-					Error: "channel not found",
+					Message: "channel not found",
 				})
 			default:
 				ch.logger.Error(err.Error())
 				c.JSON(http.StatusInternalServerError, response.Response{
-					Error: "internal server error",
+					Message: "internal server error",
 				})
 			}
 			return
@@ -393,12 +415,12 @@ func (ch *channelHandler) GetChannelByID() gin.HandlerFunc {
 			switch {
 			case errors.Is(err, apperrors.ErrChannelNotFound):
 				c.JSON(http.StatusNotFound, response.Response{
-					Error: "channel not found",
+					Message: "channel not found",
 				})
 			default:
 				ch.logger.Error(err.Error())
 				c.JSON(http.StatusInternalServerError, response.Response{
-					Error: "internal server error",
+					Message: "internal server error",
 				})
 			}
 			return

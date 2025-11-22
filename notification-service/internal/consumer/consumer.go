@@ -25,6 +25,16 @@ type notificationConsumer struct {
 	notificationService service.NotificationService
 }
 
+func (n *notificationConsumer) commitMessage(m kafka.Message) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	err := n.kafkaReader.CommitMessages(ctx, m)
+	cancel()
+	if err != nil {
+		err = fmt.Errorf("NotificationConsumer.Start: %w", err)
+		n.logger.Log(zap.ErrorLevel, "failed to commit messages", zap.Error(err))
+	}
+}
+
 func (n *notificationConsumer) Start() {
 	go func() {
 		for {
@@ -38,22 +48,14 @@ func (n *notificationConsumer) Start() {
 				continue
 			}
 			if m.Value == nil {
-				err = n.kafkaReader.CommitMessages(context.Background(), m)
-				if err != nil {
-					err = fmt.Errorf("NotificationConsumer.Start: %w", err)
-					n.logger.Log(zap.ErrorLevel, "failed to commit messages", zap.Error(err))
-				}
+				n.commitMessage(m)
 				continue
 			}
 			var event model.Notification
 			if err = json.Unmarshal(m.Value, &event); err != nil {
 				err = fmt.Errorf("NotificationConsumer.Start: %w", err)
 				n.logger.Log(zap.ErrorLevel, "failed to unmarshal message", zap.Error(err))
-				err = n.kafkaReader.CommitMessages(context.Background(), m)
-				if err != nil {
-					err = fmt.Errorf("NotificationConsumer.Start: %w", err)
-					n.logger.Log(zap.ErrorLevel, "failed to commit messages", zap.Error(err))
-				}
+				n.commitMessage(m)
 				continue
 			}
 			event.IsRead = false
@@ -63,7 +65,9 @@ func (n *notificationConsumer) Start() {
 			if err != nil {
 				err = fmt.Errorf("NotificationConsumer.Start: %w", err)
 				n.logger.Log(zap.ErrorLevel, "failed to create notification", zap.Error(err))
+				continue
 			}
+			n.commitMessage(m)
 		}
 	}()
 }

@@ -17,6 +17,8 @@ tags:
   - name: Categories
   - name: Streams
   - name: Notifications
+  - name: Donations
+  - name: Wallets
 
 paths:
   /auth/register:
@@ -508,6 +510,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
   /channels/subscription/{channelId}:
+    get:
+      tags: [ Channels ]
+      summary: Get subscription
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: channelId
+          required: true
+          schema:
+            type: string
+          description: Channel id (UUID)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
     patch:
       tags: [ Channels ]
       summary: Update subscription
@@ -823,6 +843,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+
+  /donations:
+    post:
+      tags: [ Donations ]
+      summary: Create donate transactions
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDonateTransactionRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDonateRes'
+  /donations/{txID}:
+    get:
+      tags: [ Donations ]
+      summary: Get donate transaction by ID
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: txID
+          required: true
+          schema:
+            type: string
+          description: Transaction id (UUID)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DonateTxRes'
+  /donations/donate:
+    post:
+      tags: [ Donations ]
+      summary: Get donate transactions
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetDonateRequest'
+      responses:
+        '200':
+          description: List of donate
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DonateTxRes'
+  /donations/receive:
+    post:
+      tags: [ Donations ]
+      summary: Get receive donate transactions
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetDonateRequest'
+      responses:
+        '200':
+          description: List of donate
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DonateTxRes'
+  /wallets/self:
+    get:
+      tags: [ Wallets ]
+      summary: Get donate transaction by ID
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: List of donate
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WalletResponse'
 components:
   securitySchemes:
     BearerAuth:
@@ -1074,5 +1189,82 @@ components:
               type: string
         is_read:
           type: boolean
+    SubscriptionResponse:
+      type: object
+      properties:
+        follower_id:
+          type: string
+        channel_id:
+          type: string
+        notification_enabled:
+          type: boolean
+    CreateDonateTransactionRequest:
+      type: object
+      required:
+        - channel_id
+        - stream_id
+        - amount
+        - donate_message
+      properties:
+        channel_id:
+          type: string
+        stream_id:
+          type: string
+        amount:
+          type: integer
+        donate_message:
+          type: string
+    GetDonateRequest:
+      type: object
+      required:
+        - fromTime
+        - toTime
+        - limit
+        - offset
+      properties:
+        fromTime:
+          type: string
+          format: date
+        toTime:
+          type: string
+          format: date
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 50
+        offset:
+          type: integer
+          minimum: 0
+    CreateDonateRes:
+      type: object
+      properties:
+        payment_url:
+          type: string
+    DonateTxRes:
+      type: object
+      properties:
+        id:
+          type: string
+        channel_id:
+          type: string
+        stream_id:
+          type: string
+        amount:
+          type: integer
+        donor_channel_id:
+          type: string
+        donate_message:
+          type: string
+        status:
+          type: string
+    WalletResponse:
+      type: object
+      properties:
+        channel_id:
+          type: string
+        amount:
+          type: integer
+        currency:
+          type: string
 security:
   - BearerAuth: []

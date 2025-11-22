@@ -75,6 +75,19 @@ services:
     volumes:
       - ./initdb/init_notification_service.sql:/docker-entrypoint-initdb.d/init.sql
 
+  pg-donation-service:
+    image: postgres:18rc1
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./initdb/init_donation_service.sql:/docker-entrypoint-initdb.d/init.sql
+
   pg-chat-service:
     image: postgres:latest
     environment:
@@ -193,6 +206,44 @@ services:
       - "traefik.http.routers.notification-router.rule=PathPrefix(`/notifications`)"
       - "traefik.http.routers.notification-router.middlewares=cors,custom-auth"
       - "traefik.http.services.notification-service.loadbalancer.server.port=8080"
+
+  donation-service:
+    build:
+      dockerfile: ./donation-service/build/Dockerfile
+      context: ..
+    environment:
+      POSTGRES_HOST: pg-donation-service
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: donation
+
+      SERVER_PORT: 8080
+      SERVER_FRONTEND_REDIRECT_URL: "http://localhost:8080/"
+
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CHANNEL_TOPIC: channel-svc.public.channels
+      KAFKA_CHANNEL_CONSUMER_GROUP: abcdxyz
+      KAFKA_PUBLISH_DONATE_TOPIC: donation-events
+
+      VNPAY_TMN_CODE:
+      VNPAY_HASH_SECRET:
+      VNPAY_PAY_URL:
+      VNPAY_RETURN_URL: http://128.199.90.123:8081/vnpay/handle-payment
+    depends_on:
+      pg-donation-service:
+        condition: service_healthy
+      init-services:
+        condition: service_completed_successfully
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.donation-router.rule=PathPrefix(`/donations`)"
+      - "traefik.http.routers.donation-router.middlewares=cors,custom-auth"
+      - "traefik.http.routers.wallet-router.rule=PathPrefix(`/wallets`)"
+      - "traefik.http.routers.wallet-router.middlewares=cors,custom-auth"
+      - "traefik.http.routers.vnpay-router.rule=PathPrefix(`/vnpay`)"
+      - "traefik.http.routers.vnpay-router.middlewares=cors"
+      - "traefik.http.services.donation-service.loadbalancer.server.port=8080"
 
   chat-service:
     build:

@@ -5,6 +5,7 @@ import (
 	"notification-service/internal/model"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type NotificationRepo interface {
@@ -18,7 +19,7 @@ type notificationRepo struct {
 }
 
 func (n *notificationRepo) CreateNotification(ctx context.Context, notification model.Notification) error {
-	return n.db.WithContext(ctx).Create(&notification).Error
+	return n.db.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&notification).Error
 }
 
 func (n *notificationRepo) MarkNotificationAsRead(ctx context.Context, notificationID []string, channelID string) error {
