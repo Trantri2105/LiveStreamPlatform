@@ -51,7 +51,7 @@ func (c *channelService) GetSubscriptionByChannelID(ctx context.Context, channel
 
 type Notification struct {
 	ID        string            `json:"id"`
-	ChannelID string            `json:"channelID_id"`
+	ChannelID string            `json:"channel_id"`
 	Type      string            `json:"type"`
 	Title     string            `json:"title"`
 	Body      string            `json:"body"`
