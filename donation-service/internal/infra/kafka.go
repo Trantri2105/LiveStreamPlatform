@@ -16,8 +16,8 @@ func NewKafkaWriter(brokers []string, topic string) *kafka.Writer {
 func NewKafkaReader(brokers []string, topic string, groupID string) *kafka.Reader {
 	return kafka.NewReader(kafka.ReaderConfig{
 		Brokers:       brokers,
-		GroupID:       topic,
-		Topic:         groupID,
+		GroupID:       groupID,
+		Topic:         topic,
 		QueueCapacity: 1000,
 	})
 }
