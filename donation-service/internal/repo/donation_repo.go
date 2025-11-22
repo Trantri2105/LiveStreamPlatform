@@ -30,7 +30,7 @@ type donationRepository struct {
 }
 
 func (d *donationRepository) UpdateWalletAmount(ctx context.Context, walletID string, amount int64) error {
-	res := d.db.WithContext(ctx).Model(&model.DonateTransaction{}).Where("channel_id = ?", walletID).Update("amount", gorm.Expr("amount + ?", amount))
+	res := d.db.WithContext(ctx).Model(&model.Wallet{}).Where("channel_id = ?", walletID).Update("amount", gorm.Expr("amount + ?", amount))
 	if res.Error != nil {
 		return res.Error
 	}
