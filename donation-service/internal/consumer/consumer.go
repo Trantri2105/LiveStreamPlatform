@@ -68,7 +68,7 @@ func (c *channelConsumer) Start() {
 			}
 			if event.Payload.Op == "c" {
 				wallet := model.Wallet{
-					ChannelID: event.Payload.Before.Id,
+					ChannelID: event.Payload.After.Id,
 					Amount:    0,
 					Currency:  "vnd",
 				}
