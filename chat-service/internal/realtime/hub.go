@@ -44,11 +44,11 @@ func (h *Hub) GetOrCreateThreadHub(streamID string) *ThreadHub {
 		unregister: make(chan *Client),
 	}
 	h.threads[streamID] = th
-	go th.run()
+	go th.Run()
 	return th
 }
 
-func (th *ThreadHub) run() {
+func (th *ThreadHub) Run() {
 	for {
 		select {
 		case c := <-th.Register:

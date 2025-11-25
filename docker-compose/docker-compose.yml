@@ -226,9 +226,9 @@ services:
       KAFKA_CHANNEL_CONSUMER_GROUP: abcdxyz
       KAFKA_PUBLISH_DONATE_TOPIC: donation-events
 
-      VNPAY_TMN_CODE:
-      VNPAY_HASH_SECRET:
-      VNPAY_PAY_URL:
+      VNPAY_TMN_CODE: 15ZMLXYR
+      VNPAY_HASH_SECRET: RT19URTSYGGGZTLAHFGXZS8YASN7HIV0
+      VNPAY_PAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
       VNPAY_RETURN_URL: http://128.199.90.123:8081/vnpay/handle-payment
     depends_on:
       pg-donation-service:
@@ -255,6 +255,10 @@ services:
       CORS_ORIGINS: "http://localhost:3000"
       CORS_ALLOW_CREDENTIALS: "false"
       DB_DSN: "postgres://postgres:postgres@pg-chat-service:5432/chatdb?sslmode=disable"
+
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CHAT_CONSUMER_GROUP: chat-service-group
+      KAFKA_PUBLISH_DONATE_TOPIC: donation-events
     ports:
       - "8001:8001"
     depends_on:

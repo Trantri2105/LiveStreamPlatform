@@ -127,3 +127,10 @@ func (c *Client) WritePump() {
 		}
 	}
 }
+
+func (th *ThreadHub) Broadcast(msg []byte) {
+	select {
+	case th.broadcast <- msg:
+	default:
+	}
+}

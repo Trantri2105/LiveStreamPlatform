@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"thanhnt208/chat-service/internal/config"
+	"thanhnt208/chat-service/internal/consumer"
 	"thanhnt208/chat-service/internal/db"
 	"thanhnt208/chat-service/internal/httpserver"
 	"thanhnt208/chat-service/internal/realtime"
@@ -13,6 +14,13 @@ func main() {
 
 	gormDB := db.Init(cfg.DBDSN)
 	hub := realtime.NewHub(gormDB)
+
+	go consumer.StartDonateConsumer(
+		cfg.Brokers[0],
+		cfg.PublishDonateTopic,
+		cfg.ChatConsumerGroup,
+		hub,
+	)
 
 	srv := httpserver.New(cfg, gormDB, hub)
 
