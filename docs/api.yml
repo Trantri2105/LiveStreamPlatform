@@ -752,12 +752,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Stream'
-  /streams/thumbnail/:id:
+  /streams/thumbnail/{streamId}:
     put:
       tags: [Streams]
       summary: Set stream thumbnail
       security:
         - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: streamId
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
