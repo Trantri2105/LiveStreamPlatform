@@ -232,6 +232,7 @@ func (u *userHandler) GetUsers() gin.HandlerFunc {
 				FirstName: user.FirstName,
 				LastName:  user.LastName,
 				Email:     user.Email,
+				Role:      user.Role,
 			}
 		}
 		c.JSON(http.StatusOK, usersRes)
