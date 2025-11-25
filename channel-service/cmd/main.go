@@ -100,7 +100,7 @@ func main() {
 	txManager := repo.NewTransactionManager(db)
 	streamRepo := repo.NewStreamRepository(esClient, db)
 	chatClient := client.NewChatClient(appConfig.Server.ChatServerUrl)
-	streamService := service.NewStreamService(channelService, categoryService, streamRepo, appConfig.Server.SrtServerUrl, appConfig.Server.HlsServerUrl, chatClient, txManager, logger)
+	streamService := service.NewStreamService(channelService, categoryService, streamRepo, appConfig.Server.SrtServerUrl, appConfig.Server.HlsServerUrl, chatClient, txManager, logger, minioClient)
 	streamHandler := handler.NewStreamHandler(logger, streamService)
 
 	gin.SetMode(gin.ReleaseMode)
