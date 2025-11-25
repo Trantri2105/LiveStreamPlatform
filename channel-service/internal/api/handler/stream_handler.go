@@ -23,11 +23,50 @@ type StreamHandler interface {
 	GetStreamByChannelID() gin.HandlerFunc
 	GetStreamBySearchText() gin.HandlerFunc
 	OVMNotify() gin.HandlerFunc
+	SetThumbnail() gin.HandlerFunc
 }
 
 type streamHandler struct {
 	logger        *zap.Logger
 	streamService service.StreamService
+}
+
+func (s *streamHandler) SetThumbnail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		channelID := c.GetHeader("X-User-Id")
+		streamID := c.Param("id")
+		stream, err := s.streamService.GetStreamByID(c, streamID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, response.Response{
+				Message: "stream not found",
+			})
+			return
+		}
+		if stream.ChannelID != channelID {
+			c.JSON(http.StatusUnauthorized, response.Response{
+				Message: "unauthorized",
+			})
+			return
+		}
+		fileHeader, err := c.FormFile("image")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		err = s.streamService.SetThumbnail(c, fileHeader, streamID)
+		if err != nil {
+			if errors.Is(err, apperrors.ErrInvalidFile) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				s.logger.Error(fmt.Sprintf("failed to set thumbnail for stream %s", streamID), zap.Error(err))
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			Message: "thumbnail set successfully",
+		})
+	}
 }
 
 func (*streamHandler) formatValidationError(err validator.FieldError) string {
@@ -124,6 +163,7 @@ func (s *streamHandler) GetStreamByID() gin.HandlerFunc {
 			HlsURL:       stream.HlsURL,
 			LiveChatURL:  stream.LiveChatURL,
 			SrtServerURL: stream.SrtServerURL,
+			ThumbnailURL: stream.ThumbnailURL,
 			Description:  stream.Description,
 			Status:       stream.Status,
 			Channel: struct {
@@ -188,6 +228,7 @@ func (s *streamHandler) GetStreamByChannelID() gin.HandlerFunc {
 				HlsURL:       stream.HlsURL,
 				LiveChatURL:  stream.LiveChatURL,
 				SrtServerURL: stream.SrtServerURL,
+				ThumbnailURL: stream.ThumbnailURL,
 				Description:  stream.Description,
 				Status:       stream.Status,
 				Channel: struct {
@@ -242,6 +283,7 @@ func (s *streamHandler) GetStreamBySearchText() gin.HandlerFunc {
 				HlsURL:       stream.HlsURL,
 				LiveChatURL:  stream.LiveChatURL,
 				SrtServerURL: stream.SrtServerURL,
+				ThumbnailURL: stream.ThumbnailURL,
 				Description:  stream.Description,
 				Status:       stream.Status,
 				Channel: struct {

@@ -35,6 +35,7 @@ type ChannelService interface {
 	UpdateSubscription(ctx context.Context, subscription model.Subscription) error
 	NotifyLiveStream(stream model.Stream) error
 	GetSubscriptionByChannelID(ctx context.Context, channelID string, followerID string) (model.Subscription, error)
+	SetBackgroundImage(ctx context.Context, fileHeader *multipart.FileHeader, channelID string) error
 }
 
 type channelService struct {
@@ -43,6 +44,34 @@ type channelService struct {
 	logger        *zap.Logger
 	kafkaWriter   *kafka.Writer
 	minioEndpoint string
+}
+
+func (c *channelService) getBackgroundID(channelID string) string {
+	return fmt.Sprintf("background_%s", channelID)
+}
+
+func (c *channelService) SetBackgroundImage(ctx context.Context, fileHeader *multipart.FileHeader, channelID string) error {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return apperrors.ErrInvalidFile
+	}
+	defer file.Close()
+
+	contentType := fileHeader.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	_, err = c.minioClient.PutObject(
+		ctx,
+		imagesBucket,
+		c.getBackgroundID(channelID),
+		file,
+		fileHeader.Size,
+		minio.PutObjectOptions{
+			ContentType: contentType,
+		},
+	)
+	return err
 }
 
 func (c *channelService) GetSubscriptionByChannelID(ctx context.Context, channelID string, followerID string) (model.Subscription, error) {
@@ -121,15 +150,40 @@ func (c *channelService) DeleteSubscription(ctx context.Context, subscription mo
 }
 
 func (c *channelService) GetChannelFollower(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error) {
-	return c.channelRepo.GetChannelFollower(ctx, channelID, limit, offset)
+	channels, err := c.channelRepo.GetChannelFollower(ctx, channelID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for i := range channels {
+		c.enrichChannelInfoWithImagesURL(ctx, &channels[i])
+	}
+	return channels, nil
 }
 
 func (c *channelService) GetFollowingChannel(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error) {
-	return c.channelRepo.GetFollowingChannel(ctx, channelID, limit, offset)
+	channels, err := c.channelRepo.GetFollowingChannel(ctx, channelID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for i := range channels {
+		c.enrichChannelInfoWithImagesURL(ctx, &channels[i])
+	}
+	return channels, nil
 }
 
 func (c *channelService) GetLiveFollowingChannel(ctx context.Context, channelID string, limit int, offset int) ([]model.Channel, error) {
-	return c.channelRepo.GetLiveFollowingChannel(ctx, channelID, limit, offset)
+	channels, err := c.channelRepo.GetLiveFollowingChannel(ctx, channelID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for i := range channels {
+		c.enrichChannelInfoWithImagesURL(ctx, &channels[i])
+	}
+	return channels, nil
+}
+
+func (c *channelService) getAvatarID(channelID string) string {
+	return fmt.Sprintf("avatar_%s", channelID)
 }
 
 func (c *channelService) SetChannelAvatar(ctx context.Context, fileHeader *multipart.FileHeader, channelID string) error {
@@ -146,7 +200,7 @@ func (c *channelService) SetChannelAvatar(ctx context.Context, fileHeader *multi
 	_, err = c.minioClient.PutObject(
 		ctx,
 		imagesBucket,
-		channelID,
+		c.getAvatarID(channelID),
 		file,
 		fileHeader.Size,
 		minio.PutObjectOptions{
@@ -170,17 +224,31 @@ func (c *channelService) UpdateChannelByID(ctx context.Context, channel model.Ch
 	return c.channelRepo.UpdateChannelByID(ctx, channel)
 }
 
+func (c *channelService) enrichChannelInfoWithImagesURL(ctx context.Context, channel *model.Channel) {
+	avatarURL, err := c.getPresignedURL(ctx, c.getAvatarID(channel.ID))
+	if err != nil {
+		if !errors.Is(err, apperrors.ErrMinioKeyNotFound) {
+			c.logger.Error("failed to get avatar url", zap.Error(err))
+		}
+	} else {
+		channel.AvatarURL = avatarURL
+	}
+	backgroundURL, err := c.getPresignedURL(ctx, c.getBackgroundID(channel.ID))
+	if err != nil {
+		if !errors.Is(err, apperrors.ErrMinioKeyNotFound) {
+			c.logger.Error("failed to get background url", zap.Error(err))
+		}
+	} else {
+		channel.BackgroundURL = backgroundURL
+	}
+}
+
 func (c *channelService) GetChannelByID(ctx context.Context, channelID string) (model.Channel, error) {
 	channel, err := c.channelRepo.GetChannelByID(ctx, channelID)
 	if err != nil {
 		return model.Channel{}, err
 	}
-	avatarURL, err := c.getPresignedURL(ctx, channelID)
-	if err != nil {
-		c.logger.Error("failed to get avatar url", zap.Error(err))
-	} else {
-		channel.AvatarURL = avatarURL
-	}
+	c.enrichChannelInfoWithImagesURL(ctx, &channel)
 	return channel, nil
 }
 
@@ -192,7 +260,7 @@ func (c *channelService) getPresignedURL(ctx context.Context, key string) (strin
 		}
 		return "", err
 	}
-	u, err := c.minioClient.PresignedGetObject(ctx, imagesBucket, key, 15*time.Minute, nil)
+	u, err := c.minioClient.PresignedGetObject(ctx, imagesBucket, key, 15*time.Hour, nil)
 	if err != nil {
 		return "", err
 	}
@@ -205,15 +273,7 @@ func (c *channelService) GetChannelBySearchText(ctx context.Context, searchText 
 		return nil, err
 	}
 	for i := range channels {
-		avatarURL, err := c.getPresignedURL(ctx, channels[i].ID)
-		if err != nil {
-			c.logger.Error("failed to get avatar url", zap.Error(err))
-			if !errors.Is(err, apperrors.ErrMinioKeyNotFound) {
-				break
-			}
-			continue
-		}
-		channels[i].AvatarURL = avatarURL
+		c.enrichChannelInfoWithImagesURL(ctx, &channels[i])
 	}
 	return channels, nil
 }

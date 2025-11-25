@@ -6,6 +6,7 @@ type StreamResponse struct {
 	HlsURL       string `json:"hls_url"`
 	LiveChatURL  string `json:"live_chat_url"`
 	SrtServerURL string `json:"srt_server_url"`
+	ThumbnailURL string `json:"thumbnail_url"`
 	StreamKey    string `json:"stream_key,omitempty"`
 	Description  string `json:"description,omitempty"`
 	Status       string `json:"status"`

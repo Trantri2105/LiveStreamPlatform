@@ -28,11 +28,36 @@ type ChannelHandler interface {
 	GetFollowingChannel() gin.HandlerFunc
 	UpdateSubscription() gin.HandlerFunc
 	GetSubscriptionByChannelID() gin.HandlerFunc
+	SetBackgroundImage() gin.HandlerFunc
 }
 
 type channelHandler struct {
 	logger         *zap.Logger
 	channelService service.ChannelService
+}
+
+func (ch *channelHandler) SetBackgroundImage() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.GetHeader("X-User-Id")
+		fileHeader, err := c.FormFile("image")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		err = ch.channelService.SetBackgroundImage(c, fileHeader, id)
+		if err != nil {
+			if errors.Is(err, apperrors.ErrInvalidFile) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ch.logger.Error(fmt.Sprintf("failed to set background for channel %s", id), zap.Error(err))
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			Message: "background set successfully",
+		})
+	}
 }
 
 func (ch *channelHandler) GetSubscriptionByChannelID() gin.HandlerFunc {
@@ -201,6 +226,7 @@ func (ch *channelHandler) GetChannelFollower() gin.HandlerFunc {
 				Title:             channel.Title,
 				Description:       channel.Description,
 				AvatarURL:         channel.AvatarURL,
+				BackgroundURL:     channel.BackgroundURL,
 				SubscriptionCount: channel.SubscriptionCount,
 				IsLive:            channel.IsLive,
 			}
@@ -249,6 +275,7 @@ func (ch *channelHandler) GetFollowingChannel() gin.HandlerFunc {
 				Title:             channel.Title,
 				Description:       channel.Description,
 				AvatarURL:         channel.AvatarURL,
+				BackgroundURL:     channel.BackgroundURL,
 				SubscriptionCount: channel.SubscriptionCount,
 				IsLive:            channel.IsLive,
 			}
@@ -320,6 +347,7 @@ func (ch *channelHandler) GetChannelBySearchText() gin.HandlerFunc {
 				Title:             channel.Title,
 				Description:       channel.Description,
 				AvatarURL:         channel.AvatarURL,
+				BackgroundURL:     channel.BackgroundURL,
 				SubscriptionCount: channel.SubscriptionCount,
 				IsLive:            channel.IsLive,
 			})
@@ -430,6 +458,7 @@ func (ch *channelHandler) GetChannelByID() gin.HandlerFunc {
 			Title:             channel.Title,
 			Description:       channel.Description,
 			AvatarURL:         channel.AvatarURL,
+			BackgroundURL:     channel.BackgroundURL,
 			SubscriptionCount: channel.SubscriptionCount,
 			IsLive:            channel.IsLive,
 		})

@@ -15,4 +15,5 @@ func SetUpStreamRoutes(r *gin.Engine, h handler.StreamHandler) {
 	privateStreamRoutes := r.Group("/streams")
 	privateStreamRoutes.POST("", h.CreateStream())
 	privateStreamRoutes.POST("/notify", h.OVMNotify())
+	privateStreamRoutes.PUT("/thumbnail/:id", h.SetThumbnail())
 }

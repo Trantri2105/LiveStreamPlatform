@@ -5,6 +5,7 @@ type ChannelResponse struct {
 	Title             string `json:"title"`
 	Description       string `json:"description"`
 	AvatarURL         string `json:"avatar_url"`
+	BackgroundURL     string `json:"background_url"`
 	SubscriptionCount int    `json:"subscription_count"`
 	IsLive            *bool  `json:"is_live"`
 }

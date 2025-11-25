@@ -491,6 +491,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+  /channels/self/background:
+    put:
+      tags: [ Channels ]
+      summary: Set channel background
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Background image file to upload
+      responses:
+        '200':
+          description: Background set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   /channels/subscription:
     post:
       tags: [ Channels ]
@@ -726,6 +752,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Stream'
+  /streams/thumbnail/:id:
+    put:
+      tags: [Streams]
+      summary: Set stream thumbnail
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Thumbnail image file to upload
+      responses:
+        '200':
+          description: Thumbnail set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   /public/streams/{streamId}:
     get:
       tags: [Streams]
@@ -1043,6 +1095,10 @@ components:
           type: string
         description:
           type: string
+        avatar_url:
+          type: string
+        background_url:
+          type: string
         subscription_count:
           type: integer
         is_live:
@@ -1133,6 +1189,8 @@ components:
         srt_server_url:
           type: string
           nullable: true
+        thumbnail_url:
+          type: string
         status:
           type: string
           nullable: true

@@ -3,13 +3,18 @@ package service
 import (
 	"channel-service/internal/api/dto/request"
 	"channel-service/internal/client"
+	apperrors "channel-service/internal/error"
 	"channel-service/internal/model"
 	"channel-service/internal/repo"
 	"context"
+	"errors"
 	"fmt"
+	"mime/multipart"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -21,6 +26,7 @@ type StreamService interface {
 	UpdateStreamById(ctx context.Context, stream model.Stream) error
 	GetStreamBySearchText(ctx context.Context, searchText string, status string, limit int, offset int) ([]model.Stream, error)
 	HandleOVMNotify(ctx context.Context, request request.OVMRequest) (map[string]interface{}, error)
+	SetThumbnail(ctx context.Context, fileHeader *multipart.FileHeader, streamID string) error
 }
 
 type streamService struct {
@@ -30,8 +36,63 @@ type streamService struct {
 	streamRepo      repo.StreamRepository
 	txManager       repo.TransactionManager
 	logger          *zap.Logger
+	minioClient     *minio.Client
 	srtServerURL    string
 	hlsServerURL    string
+}
+
+func (s *streamService) getThumbnailID(streamID string) string {
+	return fmt.Sprintf("thumbnail_%s", streamID)
+}
+
+func (s *streamService) SetThumbnail(ctx context.Context, fileHeader *multipart.FileHeader, streamID string) error {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return apperrors.ErrInvalidFile
+	}
+	defer file.Close()
+
+	contentType := fileHeader.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	_, err = s.minioClient.PutObject(
+		ctx,
+		imagesBucket,
+		s.getThumbnailID(streamID),
+		file,
+		fileHeader.Size,
+		minio.PutObjectOptions{
+			ContentType: contentType,
+		},
+	)
+	return err
+}
+
+func (s *streamService) getPresignedURL(ctx context.Context, key string) (string, error) {
+	_, err := s.minioClient.StatObject(ctx, imagesBucket, key, minio.StatObjectOptions{})
+	if err != nil {
+		if minio.ToErrorResponse(err).Code == "NoSuchKey" {
+			return "", apperrors.ErrMinioKeyNotFound
+		}
+		return "", err
+	}
+	u, err := s.minioClient.PresignedGetObject(ctx, imagesBucket, key, 15*time.Hour, nil)
+	if err != nil {
+		return "", err
+	}
+	return u.String(), nil
+}
+
+func (s *streamService) enrichStreamWithImagesURL(ctx context.Context, stream *model.Stream) {
+	thumbnailURL, err := s.getPresignedURL(ctx, s.getThumbnailID(stream.ID))
+	if err != nil {
+		if !errors.Is(err, apperrors.ErrMinioKeyNotFound) {
+			s.logger.Error("failed to get avatar url", zap.Error(err))
+		}
+	} else {
+		stream.ThumbnailURL = thumbnailURL
+	}
 }
 
 func (s *streamService) HandleOVMNotify(ctx context.Context, request request.OVMRequest) (map[string]interface{}, error) {
@@ -132,11 +193,23 @@ func (s *streamService) CreateStream(ctx context.Context, stream model.Stream, u
 }
 
 func (s *streamService) GetStreamByID(ctx context.Context, id string) (model.Stream, error) {
-	return s.streamRepo.GetStreamByID(ctx, id)
+	stream, err := s.streamRepo.GetStreamByID(ctx, id)
+	if err != nil {
+		return model.Stream{}, err
+	}
+	s.enrichStreamWithImagesURL(ctx, &stream)
+	return stream, nil
 }
 
 func (s *streamService) GetStreamByChannelID(ctx context.Context, channelID string, status string, limit int, offset int) ([]model.Stream, error) {
-	return s.streamRepo.GetStreamByChannelID(ctx, channelID, status, limit, offset)
+	streams, err := s.streamRepo.GetStreamByChannelID(ctx, channelID, status, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for i := range streams {
+		s.enrichStreamWithImagesURL(ctx, &streams[i])
+	}
+	return streams, nil
 }
 
 func (s *streamService) UpdateStreamById(ctx context.Context, stream model.Stream) error {
@@ -144,10 +217,17 @@ func (s *streamService) UpdateStreamById(ctx context.Context, stream model.Strea
 }
 
 func (s *streamService) GetStreamBySearchText(ctx context.Context, searchText string, status string, limit int, offset int) ([]model.Stream, error) {
-	return s.streamRepo.GetStreamBySearchText(ctx, searchText, status, limit, offset)
+	streams, err := s.streamRepo.GetStreamBySearchText(ctx, searchText, status, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for i := range streams {
+		s.enrichStreamWithImagesURL(ctx, &streams[i])
+	}
+	return streams, nil
 }
 
-func NewStreamService(channelService ChannelService, categoryService CategoryService, streamRepo repo.StreamRepository, srtServerURL string, hlsServerUrl string, chatClient client.ChatClient, txManager repo.TransactionManager, logger *zap.Logger) StreamService {
+func NewStreamService(channelService ChannelService, categoryService CategoryService, streamRepo repo.StreamRepository, srtServerURL string, hlsServerUrl string, chatClient client.ChatClient, txManager repo.TransactionManager, logger *zap.Logger, minioClient *minio.Client) StreamService {
 	return &streamService{
 		channelService:  channelService,
 		categoryService: categoryService,
@@ -157,5 +237,6 @@ func NewStreamService(channelService ChannelService, categoryService CategorySer
 		chatClient:      chatClient,
 		txManager:       txManager,
 		logger:          logger,
+		minioClient:     minioClient,
 	}
 }

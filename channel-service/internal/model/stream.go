@@ -21,6 +21,7 @@ type Stream struct {
 	ChannelTitle  string `json:"channel_title" gorm:"-"`
 	CategoryID    string `json:"category_id"`
 	CategoryTitle string `json:"category_title" gorm:"-"`
+	ThumbnailURL  string `json:"thumbnail_url" gorm:"-"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

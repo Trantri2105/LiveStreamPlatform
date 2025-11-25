@@ -95,5 +95,6 @@ INSERT INTO categories (title, created_at, updated_at) VALUES
 ('Indie Games', NOW(), NOW()),
 ('Simulation Games', NOW(), NOW()),
 ('Speedrunning', NOW(), NOW()),
-('Charity Streams', NOW(), NOW());
+('Charity Streams', NOW(), NOW()),
+('Other', NOW(), NOW());
 

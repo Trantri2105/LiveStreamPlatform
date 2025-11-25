@@ -7,6 +7,7 @@ type Channel struct {
 	Title             string `json:"title"`
 	Description       string `json:"description"`
 	AvatarURL         string `json:"avatar_url" gorm:"-"`
+	BackgroundURL     string `json:"background_url" gorm:"-"`
 	SubscriptionCount int    `json:"subscription_count"`
 	IsLive            *bool  `json:"is_live"`
 	CreatedAt         time.Time

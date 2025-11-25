@@ -21,4 +21,5 @@ func SetUpChannelRoutes(r *gin.Engine, h handler.ChannelHandler) {
 	privateChannelRoutes.GET("/following", h.GetFollowingChannel())
 	privateChannelRoutes.PATCH("/subscription/:id", h.UpdateSubscription())
 	privateChannelRoutes.GET("/subscription/:id", h.GetSubscriptionByChannelID())
+	privateChannelRoutes.PUT("/self/background", h.SetBackgroundImage())
 }
