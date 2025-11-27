@@ -65,6 +65,7 @@ func (d *donationHandler) GetTransactionByID() gin.HandlerFunc {
 			DonorChannelID: tx.DonorChannelID,
 			DonateMessage:  tx.DonateMessage,
 			Status:         tx.Status,
+			CreatedAt:      tx.CreatedAt,
 		})
 	}
 }
@@ -125,6 +126,7 @@ func (d *donationHandler) GetDonateTransactions() gin.HandlerFunc {
 				DonorChannelID: donate.DonorChannelID,
 				DonateMessage:  donate.DonateMessage,
 				Status:         donate.Status,
+				CreatedAt:      donate.CreatedAt,
 			}
 		}
 		c.JSON(http.StatusOK, res)
@@ -187,6 +189,7 @@ func (d *donationHandler) GetReceiveDonateTransaction() gin.HandlerFunc {
 				DonorChannelID: donate.DonorChannelID,
 				DonateMessage:  donate.DonateMessage,
 				Status:         donate.Status,
+				CreatedAt:      donate.CreatedAt,
 			}
 		}
 		c.JSON(http.StatusOK, res)
