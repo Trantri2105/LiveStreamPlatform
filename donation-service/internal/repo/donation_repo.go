@@ -99,7 +99,7 @@ func (d *donationRepository) GetChannelWallet(ctx context.Context, channelID str
 
 func (d *donationRepository) GetDonateTransaction(ctx context.Context, channelID string, fromTime time.Time, toTime time.Time, limit, offset int) ([]model.DonateTransaction, error) {
 	var transactions []model.DonateTransaction
-	result := d.db.WithContext(ctx).Where("donor_channel_id = ? AND created_at >= ? AND created_at < ?", channelID, fromTime, toTime).Limit(limit).Offset(offset).Find(&transactions)
+	result := d.db.WithContext(ctx).Where("donor_channel_id = ? AND created_at >= ? AND created_at < ?", channelID, fromTime, toTime).Limit(limit).Offset(offset).Order("created_at DESC").Find(&transactions)
 	if result.Error != nil {
 		return transactions, result.Error
 	}
@@ -108,7 +108,7 @@ func (d *donationRepository) GetDonateTransaction(ctx context.Context, channelID
 
 func (d *donationRepository) GetReceiveDonateTransaction(ctx context.Context, channelID string, fromTime time.Time, toTime time.Time, limit, offset int) ([]model.DonateTransaction, error) {
 	var transactions []model.DonateTransaction
-	result := d.db.WithContext(ctx).Where("channel_id = ? AND created_at >= ? AND created_at < ?", channelID, fromTime, toTime).Limit(limit).Offset(offset).Find(&transactions)
+	result := d.db.WithContext(ctx).Where("channel_id = ? AND created_at >= ? AND created_at < ?", channelID, fromTime, toTime).Limit(limit).Offset(offset).Order("created_at DESC").Find(&transactions)
 	if result.Error != nil {
 		return transactions, result.Error
 	}

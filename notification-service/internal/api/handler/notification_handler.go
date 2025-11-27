@@ -76,6 +76,7 @@ func (n *notificationHandler) GetNotifications() gin.HandlerFunc {
 				Body:      notif.Body,
 				Data:      notif.Data,
 				IsRead:    notif.IsRead,
+				CreatedAt: notif.CreatedAt,
 			}
 		}
 		c.JSON(http.StatusOK, notifRes)

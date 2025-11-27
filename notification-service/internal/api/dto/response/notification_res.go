@@ -1,6 +1,10 @@
 package response
 
-import "gorm.io/datatypes"
+import (
+	"time"
+
+	"gorm.io/datatypes"
+)
 
 type NotificationResp struct {
 	ID        string            `json:"id"`
@@ -10,4 +14,5 @@ type NotificationResp struct {
 	Body      string            `json:"body"`
 	Data      datatypes.JSONMap `json:"data" gorm:"type:jsonb"`
 	IsRead    bool              `json:"is_read"`
+	CreatedAt time.Time         `json:"created_at"`
 }
