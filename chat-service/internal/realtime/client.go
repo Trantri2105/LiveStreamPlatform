@@ -17,20 +17,23 @@ type ClockCfg struct {
 }
 
 type Client struct {
-	conn     *websocket.Conn
-	streamID string
-	userID   string
-	Username string
-	send     chan []byte
-	clock    ClockCfg
-	hub      *Hub
+	conn          *websocket.Conn
+	streamID      string
+	userID        string
+	Username      string
+	send          chan []byte
+	authenticated bool
+	clock         ClockCfg
+	hub           *Hub
 }
 
-func NewClient(conn *websocket.Conn, streamID, userID string, clk ClockCfg, hub *Hub) *Client {
+func NewClient(conn *websocket.Conn, streamID, userID, username string, authenticated bool, clk ClockCfg, hub *Hub) *Client {
 	return &Client{
 		conn:     conn,
 		streamID: streamID,
 		userID:   userID,
+		Username: username,
+		authenticated: authenticated,
 		send:     make(chan []byte, 256),
 		clock:    clk,
 		hub:      hub,
@@ -58,6 +61,23 @@ func (c *Client) ReadPump(th *ThreadHub) {
 		if mt != websocket.TextMessage {
 			continue
 		}
+
+		if !c.authenticated {
+			errMsg := map[string]interface{}{
+				"type":      "error",
+				"code":      "unauthenticated_cannot_send",
+				"message":   "You must be logged in to send messages.",
+				"timestamp": time.Now().Unix(),
+			}
+			if b, e := json.Marshal(errMsg); e == nil {
+				select {
+				case c.send <- b:
+				default:
+				}
+			}
+			continue
+		}
+		
 
 		var msg map[string]any
 		if err := json.Unmarshal(message, &msg); err != nil {

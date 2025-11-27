@@ -38,10 +38,19 @@ func (h *ChatWS) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var userID string
+	var authenticated bool
+	var username string
+
 	claims, err := auth.ParseJWTFromRequest(r, h.JWTKey)
 	if err != nil {
-		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
-		return
+		authenticated = false
+		userID = ""
+		username = "Guest"
+	} else {
+		authenticated = true
+		userID = claims.UserID
+		username = "" 
 	}
 
 	conn, err := h.Upgrader.Upgrade(w, r, nil)
@@ -49,24 +58,24 @@ func (h *ChatWS) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := realtime.NewClient(conn, streamID, claims.UserID, h.Clock, h.Hub)
+	client := realtime.NewClient(conn, streamID, userID, username, authenticated, h.Clock, h.Hub)
 	th := h.Hub.GetOrCreateThreadHub(streamID)
 	th.Register <- client
 
-	userID := claims.UserID
-
-	go func(uid string) {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
-		if username, err := fetchChannelTitle(ctx, uid); err != nil {
-			log.Printf("fetch username by channelId(userID=%s) failed: %v", uid, err)
-			return
-		} else {
-			client.Username = username
-		}
-	}(userID)
+	if authenticated {
+		go func(uid string) {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			if uname, err := fetchChannelTitle(ctx, uid); err != nil {
+				log.Printf("fetch username by channelId(userID=%s) failed: %v", uid, err)
+			} else {
+				client.Username = uname
+			}
+		}(userID)
+	}
 
 	go realtime.SendHistory(h.Hub, client, streamID, 50)
+
 	go client.WritePump()
 	go client.ReadPump(th)
 }
