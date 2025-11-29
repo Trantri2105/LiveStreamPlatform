@@ -47,10 +47,12 @@ func (s *Server) Start() error {
 	}, s.cfg.JWTSecret)
 
 	api := r.PathPrefix("/api").Subrouter()
-	api.Use(middleware.AuthRequired(s.cfg.JWTSecret))
-	api.HandleFunc("/chat/thread", chatHTTP.CreateChatThread).Methods("POST", "OPTIONS")
 	api.HandleFunc("/chat/thread/{streamId}/messages", chatHTTP.GetThreadMessages).Methods("GET", "OPTIONS")
-	api.HandleFunc("/chat/thread/{streamId}/close", chatHTTP.CloseThread).Methods("POST", "OPTIONS")
+
+	secured := r.PathPrefix("/api").Subrouter()
+	secured.Use(middleware.AuthRequired(s.cfg.JWTSecret))
+	secured.HandleFunc("/chat/thread", chatHTTP.CreateChatThread).Methods("POST", "OPTIONS")
+	secured.HandleFunc("/chat/thread/{streamId}/close", chatHTTP.CloseThread).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/ws/chat/{streamId}", chatWS.Handle)
 

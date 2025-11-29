@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const MessageType = "message"
+
 type ClockCfg struct {
 	MaxWSReadBytes int64
 	ReadDeadline   time.Duration
@@ -94,6 +96,7 @@ func (c *Client) ReadPump(th *ThreadHub) {
 
 		go SaveMessage(c.hub, models.Message{
 			StreamID:  c.streamID,
+			Type:      MessageType,
 			UserID:    c.userID,
 			Username:  c.Username,
 			Content:   content,
@@ -101,7 +104,7 @@ func (c *Client) ReadPump(th *ThreadHub) {
 		})
 
 		broadcast := map[string]any{
-			"type":      "message",
+			"type":      MessageType,
 			"user_id":   c.userID,
 			"username":  c.Username,
 			"content":   content,

@@ -92,8 +92,10 @@ func SendHistory(h *Hub, c *Client, streamID string, limit int) {
 	}
 	for i := len(messages) - 1; i >= 0; i-- {
 		payload := map[string]any{
-			"type":      "history",
+			"type":      messages[i].Type,
 			"user_id":   messages[i].UserID,
+			"username":  messages[i].Username,
+			"amount":    messages[i].Amount,
 			"content":   messages[i].Content,
 			"timestamp": messages[i].CreatedAt.Unix(),
 		}

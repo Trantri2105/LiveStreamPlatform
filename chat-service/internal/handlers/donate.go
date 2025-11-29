@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const DonateType = "donate"
+
 type DonateTransaction struct {
 	ID             string    `json:"id"`
 	ChannelID      string    `json:"channel_id"`
@@ -45,7 +47,7 @@ func HandleDonateMessage(donate DonateTransaction, hub *realtime.Hub) {
 	}
 
 	msg := map[string]any{
-		"type":      "donate",
+		"type":      DonateType,
 		"user_id":   donate.DonorChannelID,
 		"username":  username,
 		"amount":    donate.Amount,
@@ -59,9 +61,11 @@ func HandleDonateMessage(donate DonateTransaction, hub *realtime.Hub) {
 
 	go realtime.SaveMessage(hub, models.Message{
 		StreamID:  donate.StreamID,
+		Type:      DonateType,
 		UserID:    donate.DonorChannelID,
 		Username:  username,
 		Content:   content,
 		CreatedAt: donate.CreatedAt,
+		Amount:    donate.Amount,
 	})
 }
