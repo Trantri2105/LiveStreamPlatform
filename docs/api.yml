@@ -725,6 +725,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '200':
+          description: Categories delete successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   /categories/{id}:
     delete:
       tags: [ Categories ]
@@ -737,12 +744,13 @@ paths:
             type: string
       security:
         - BearerAuth: [ ]
-      '200':
-        description: Categories delete successfully
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Response'
+      responses:
+        '200':
+          description: Categories delete successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   /public/categories/search:
     post:
       tags: [Categories]
