@@ -10,17 +10,29 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v9"
 	"github.com/elastic/go-elasticsearch/v9/esapi"
+	"gorm.io/gorm"
 )
 
 type CategoryRepository interface {
 	GetCategoryByID(ctx context.Context, id string) (model.Category, error)
 	GetCategoryBySearchText(ctx context.Context, searchText string, offset int, limit int) ([]model.Category, error)
+	CreateCategory(ctx context.Context, category model.Category) error
+	DeleteCategory(ctx context.Context, id string) error
 }
 
 const categoriesIndex = "categories"
 
 type categoryRepository struct {
 	es *elasticsearch.Client
+	db *gorm.DB
+}
+
+func (c *categoryRepository) CreateCategory(ctx context.Context, category model.Category) error {
+	return c.db.WithContext(ctx).Create(&category).Error
+}
+
+func (c *categoryRepository) DeleteCategory(ctx context.Context, id string) error {
+	return c.db.WithContext(ctx).Delete(&model.Category{}, "id = ?", id).Error
 }
 
 func (c *categoryRepository) GetCategoryByID(ctx context.Context, id string) (model.Category, error) {
@@ -116,8 +128,9 @@ func (c *categoryRepository) GetCategoryBySearchText(ctx context.Context, search
 	return categories, nil
 }
 
-func NewCategoryRepository(es *elasticsearch.Client) CategoryRepository {
+func NewCategoryRepository(es *elasticsearch.Client, db *gorm.DB) CategoryRepository {
 	return &categoryRepository{
 		es: es,
+		db: db,
 	}
 }

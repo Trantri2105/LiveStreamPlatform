@@ -93,7 +93,7 @@ func main() {
 	channelService := service.NewChannelService(channelRepo, logger, minioClient, appConfig.Minio.Endpoint, kafkaWriter)
 	channelHandler := handler.NewChannelHandler(logger, channelService)
 
-	categoryRepo := repo.NewCategoryRepository(esClient)
+	categoryRepo := repo.NewCategoryRepository(esClient, db)
 	categoryService := service.NewCategoryService(categoryRepo)
 	categoryHandler := handler.NewCategoryHandler(logger, categoryService)
 

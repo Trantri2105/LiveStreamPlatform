@@ -713,6 +713,36 @@ paths:
                 $ref: '#/components/schemas/Category'
         '404':
           description: Category not found
+  /categories:
+    post:
+      tags: [Categories]
+      summary: Create category
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+  /categories/{id}:
+    delete:
+      tags: [ Categories ]
+      summary: Delete category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: [ ]
+      '200':
+        description: Categories delete successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Response'
   /public/categories/search:
     post:
       tags: [Categories]
@@ -1329,6 +1359,11 @@ components:
         amount:
           type: integer
         currency:
+          type: string
+    CreateCategoryRequest:
+      type: object
+      properties:
+        title:
           type: string
 security:
   - BearerAuth: []

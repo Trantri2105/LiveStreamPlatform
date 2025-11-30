@@ -4,6 +4,7 @@ import (
 	"channel-service/internal/api/dto/request"
 	"channel-service/internal/api/dto/response"
 	apperrors "channel-service/internal/error"
+	"channel-service/internal/model"
 	"channel-service/internal/service"
 	"errors"
 	"net/http"
@@ -15,11 +16,56 @@ import (
 type CategoryHandler interface {
 	GetCategoryByID() gin.HandlerFunc
 	GetCategoryBySearchText() gin.HandlerFunc
+	CreateCategory() gin.HandlerFunc
+	DeleteCategory() gin.HandlerFunc
 }
 
 type categoryHandler struct {
 	logger          *zap.Logger
 	categoryService service.CategoryService
+}
+
+func (ca *categoryHandler) CreateCategory() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req request.CreateCategoryRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "invalid request body",
+			})
+			return
+		}
+		newCategory := model.Category{
+			Title: req.Title,
+		}
+		err := ca.categoryService.CreateCategory(c, newCategory)
+		if err != nil {
+			ca.logger.Error("failed to create category", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, response.Response{
+				Message: "internal server error",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			Message: "success",
+		})
+	}
+}
+
+func (ca *categoryHandler) DeleteCategory() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		err := ca.categoryService.DeleteCategory(c, id)
+		if err != nil {
+			ca.logger.Error("failed to delete category", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, response.Response{
+				Message: "internal server error",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			Message: "success",
+		})
+	}
 }
 
 func (ca *categoryHandler) GetCategoryByID() gin.HandlerFunc {
