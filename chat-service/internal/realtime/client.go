@@ -1,7 +1,10 @@
 package realtime
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"net/http"
 	"strings"
 	"thanhnt208/chat-service/internal/models"
 	"time"
@@ -10,6 +13,14 @@ import (
 )
 
 const MessageType = "message"
+
+type FilterRequest struct {
+	Content string `json:"content"`
+}
+
+type FilterResponse struct {
+	IsToxic bool `json:"is_toxic"`
+}
 
 type ClockCfg struct {
 	MaxWSReadBytes int64
@@ -31,14 +42,14 @@ type Client struct {
 
 func NewClient(conn *websocket.Conn, streamID, userID, username string, authenticated bool, clk ClockCfg, hub *Hub) *Client {
 	return &Client{
-		conn:     conn,
-		streamID: streamID,
-		userID:   userID,
-		Username: username,
+		conn:          conn,
+		streamID:      streamID,
+		userID:        userID,
+		Username:      username,
 		authenticated: authenticated,
-		send:     make(chan []byte, 256),
-		clock:    clk,
-		hub:      hub,
+		send:          make(chan []byte, 256),
+		clock:         clk,
+		hub:           hub,
 	}
 }
 
@@ -79,7 +90,6 @@ func (c *Client) ReadPump(th *ThreadHub) {
 			}
 			continue
 		}
-		
 
 		var msg map[string]any
 		if err := json.Unmarshal(message, &msg); err != nil {
@@ -92,6 +102,27 @@ func (c *Client) ReadPump(th *ThreadHub) {
 		}
 		if len(content) > 4000 {
 			content = content[:4000]
+		}
+
+		isToxic, err := checkContentFilter(content)
+		if err != nil {
+			fmt.Printf("Warning: AI Filter offline: %v\n", err)
+		}
+
+		if isToxic {
+			blockMsg := map[string]interface{}{
+				"type":      "error",
+				"code":      "content_violation",
+				"message":   "Your message was hidden because it violates our community standards.",
+				"timestamp": time.Now().Unix(),
+			}
+			if b, e := json.Marshal(blockMsg); e == nil {
+				select {
+				case c.send <- b: 
+				default:
+				}
+			}
+			continue
 		}
 
 		go SaveMessage(c.hub, models.Message{
@@ -156,4 +187,27 @@ func (th *ThreadHub) Broadcast(msg []byte) {
 	case th.broadcast <- msg:
 	default:
 	}
+}
+
+func checkContentFilter(content string) (bool, error) {
+	url := "http://moderation-service:5000/predict"
+
+	reqBody, _ := json.Marshal(FilterRequest{Content: content})
+
+	client := http.Client{
+		Timeout: 500 * time.Millisecond,
+	}
+
+	resp, err := client.Post(url, "application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	var res FilterResponse
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return false, err
+	}
+
+	return res.IsToxic, nil
 }
