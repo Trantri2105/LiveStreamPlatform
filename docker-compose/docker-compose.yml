@@ -275,6 +275,13 @@ services:
       - "traefik.http.routers.chat-router.middlewares=chat-strip,chat-addprefix,cors,custom-auth"
       - "traefik.http.services.chat-service.loadbalancer.server.port=8001"
 
+  moderation-service:
+    build: ../moderation-service
+    container_name: moderation-service
+    env_file:
+      - ../moderation-service/.env
+    ports:
+      - "5000:5000"
 
   es:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
