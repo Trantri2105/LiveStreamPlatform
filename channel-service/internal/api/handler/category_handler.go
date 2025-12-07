@@ -7,6 +7,7 @@ import (
 	"channel-service/internal/model"
 	"channel-service/internal/service"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,11 +19,43 @@ type CategoryHandler interface {
 	GetCategoryBySearchText() gin.HandlerFunc
 	CreateCategory() gin.HandlerFunc
 	DeleteCategory() gin.HandlerFunc
+	SetImage() gin.HandlerFunc
 }
 
 type categoryHandler struct {
 	logger          *zap.Logger
 	categoryService service.CategoryService
+}
+
+func (ca *categoryHandler) SetImage() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		categoryID := c.Param("id")
+		fileHeader, err := c.FormFile("image")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		_, err = ca.categoryService.GetCategoryByID(c, categoryID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, response.Response{
+				Message: "category not found",
+			})
+			return
+		}
+		err = ca.categoryService.SetImage(c, fileHeader, categoryID)
+		if err != nil {
+			if errors.Is(err, apperrors.ErrInvalidFile) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ca.logger.Error(fmt.Sprintf("failed to set image for category %s", categoryID), zap.Error(err))
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+		c.JSON(http.StatusOK, response.Response{
+			Message: "thumbnail set successfully",
+		})
+	}
 }
 
 func (ca *categoryHandler) CreateCategory() gin.HandlerFunc {
@@ -87,6 +120,7 @@ func (ca *categoryHandler) GetCategoryByID() gin.HandlerFunc {
 		c.JSON(http.StatusOK, response.CategoryResponse{
 			ID:        category.ID,
 			Title:     category.Title,
+			ImageURL:  category.ImageURL,
 			CreatedAt: category.CreatedAt,
 			UpdatedAt: category.UpdatedAt,
 		})
@@ -121,6 +155,7 @@ func (ca *categoryHandler) GetCategoryBySearchText() gin.HandlerFunc {
 			categoriesRes = append(categoriesRes, response.CategoryResponse{
 				ID:        category.ID,
 				Title:     category.Title,
+				ImageURL:  category.ImageURL,
 				CreatedAt: category.CreatedAt,
 				UpdatedAt: category.UpdatedAt,
 			})

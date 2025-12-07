@@ -17,5 +17,6 @@ func SetUpCategoryRoutes(r *gin.Engine, h handler.CategoryHandler) {
 
 	privateChannelRoutes := r.Group("/categories")
 	privateChannelRoutes.POST("", m.CheckUserPermission(RoleAdmin), h.CreateCategory())
+	privateChannelRoutes.PUT("/:id/image", m.CheckUserPermission(RoleAdmin), h.SetImage())
 	privateChannelRoutes.DELETE("/:id", m.CheckUserPermission(RoleAdmin), h.DeleteCategory())
 }

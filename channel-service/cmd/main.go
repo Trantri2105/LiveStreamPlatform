@@ -94,7 +94,7 @@ func main() {
 	channelHandler := handler.NewChannelHandler(logger, channelService)
 
 	categoryRepo := repo.NewCategoryRepository(esClient, db)
-	categoryService := service.NewCategoryService(categoryRepo)
+	categoryService := service.NewCategoryService(categoryRepo, minioClient, logger)
 	categoryHandler := handler.NewCategoryHandler(logger, categoryService)
 
 	txManager := repo.NewTransactionManager(db)
