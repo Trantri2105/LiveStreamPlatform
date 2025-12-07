@@ -751,6 +751,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+  /categories/{categoryID}/image:
+    put:
+      tags: [ Categories ]
+      summary: Set categories image
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: categoryID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description:  image file to upload
+      responses:
+        '200':
+          description: image set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   /public/categories/search:
     post:
       tags: [Categories]
@@ -1147,6 +1179,10 @@ components:
           type: integer
         is_live:
           type: boolean
+        created_at:
+          type: date
+        updated_at:
+          type: date
     Category:
       type: object
       properties:
@@ -1154,6 +1190,12 @@ components:
           type: string
         title:
           type: string
+        image_url:
+          type: string
+        created_at:
+          type: date
+        updated_at:
+          type: date
     SearchTextRequest:
       type: object
       properties:
@@ -1206,6 +1248,10 @@ components:
         status:
           type: string
           nullable: true
+        created_at:
+          type: date
+        updated_at:
+          type: date
     GetStream:
       type: object
       properties:
@@ -1238,6 +1284,10 @@ components:
         status:
           type: string
           nullable: true
+        created_at:
+          type: date
+        updated_at:
+          type: date
     StreamSearchRequest:
       type: object
       properties:
