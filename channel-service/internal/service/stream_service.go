@@ -180,7 +180,7 @@ func (s *streamService) CreateStream(ctx context.Context, stream model.Stream, u
 	stream.SrtServerURL = s.srtServerURL
 	stream.StreamKey = fmt.Sprintf("default/app/%s", stream.ID)
 	stream.HlsURL = fmt.Sprintf("%s/app/%s/master.m3u8", s.hlsServerURL, stream.ID)
-	stream.RecordURL = fmt.Sprintf("%s/app/%s/master.m3u8", s.recordServerURL, stream.ID)
+	stream.RecordURL = fmt.Sprintf("%s/recordings/app/%s/master.m3u8", s.recordServerURL, stream.ID)
 	stream.Status = model.StatusStreamInit
 	roomChatUrl, err := s.chatClient.CreateRoomChat(ctx, userToken, stream.ID, "/api/chat/thread")
 	if err != nil {
