@@ -29,6 +29,7 @@ services:
     container_name: ome
     volumes:
       - ./ovm-conf/Server.xml:/opt/ovenmediaengine/bin/origin_conf/Server.xml
+      - ome_recordings:/mnt/recordings
     ports:
       # SRT ingest
       - "9999:9999/udp"
@@ -36,7 +37,19 @@ services:
       - "3333:3333"
     restart: unless-stopped
 
-  pg-channel-service:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-vod
+    ports:
+      - "3334:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ome_recordings:/usr/share/nginx/html/recordings
+    depends_on:
+      - ome
+    restart: always
+
+  pg:
     image: postgres:18rc1
     environment:
       POSTGRES_USER: admin
@@ -47,53 +60,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./initdb/init_channel_service.sql:/docker-entrypoint-initdb.d/init.sql
-
-  pg-auth-service:
-    image: postgres:18rc1
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: 123456
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin" ]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - ./initdb/init_auth_service.sql:/docker-entrypoint-initdb.d/init.sql
-
-  pg-notification-service:
-    image: postgres:18rc1
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: 123456
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin" ]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - ./initdb/init_notification_service.sql:/docker-entrypoint-initdb.d/init.sql
-
-  pg-donation-service:
-    image: postgres:18rc1
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: 123456
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin" ]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - ./initdb/init_donation_service.sql:/docker-entrypoint-initdb.d/init.sql
-
-  pg-chat-service:
-    image: postgres:latest
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: chatdb
+      - ./initdb/init_db.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis:
     image: redis:latest
@@ -108,7 +75,7 @@ services:
       dockerfile: ./auth-service/build/Dockerfile
       context: ..
     environment:
-      POSTGRES_HOST: pg-auth-service
+      POSTGRES_HOST: pg
       POSTGRES_PORT: 5432
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
@@ -124,7 +91,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
-      pg-auth-service:
+      pg:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -148,7 +115,7 @@ services:
       dockerfile: ./channel-service/build/Dockerfile
       context: ..
     environment:
-      POSTGRES_HOST: pg-channel-service
+      POSTGRES_HOST: pg
       POSTGRES_PORT: 5432
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
@@ -158,6 +125,7 @@ services:
       SERVER_CHAT_SERVER_URL: http://chat-service:8001
       SERVER_SRT_SERVER_URL: srt://128.199.90.123:9999
       SERVER_HLS_SERVER_URL: http://128.199.90.123:3333
+      SERVER_RECORD_SERVER_URL: http://128.199.90.123:3334
 
       ELASTICSEARCH_ADDRESSES: http://es:9200
 
@@ -168,6 +136,10 @@ services:
       KAFKA_BROKERS: kafka:9092
       KAFKA_TOPIC: notification-events
     depends_on:
+      pg:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
       init-services:
         condition: service_completed_successfully
     labels:
@@ -187,7 +159,7 @@ services:
       dockerfile: ./notification-service/build/Dockerfile
       context: ..
     environment:
-      POSTGRES_HOST: pg-notification-service
+      POSTGRES_HOST: pg
       POSTGRES_PORT: 5432
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
@@ -199,7 +171,7 @@ services:
       KAFKA_GROUP_ID: notification-consumers
       KAFKA_TOPIC: notification-events
     depends_on:
-      pg-notification-service:
+      pg:
         condition: service_healthy
       init-services:
         condition: service_completed_successfully
@@ -214,7 +186,7 @@ services:
       dockerfile: ./donation-service/build/Dockerfile
       context: ..
     environment:
-      POSTGRES_HOST: pg-donation-service
+      POSTGRES_HOST: pg
       POSTGRES_PORT: 5432
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
@@ -233,7 +205,7 @@ services:
       VNPAY_PAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
       VNPAY_RETURN_URL: http://128.199.90.123:8081/vnpay/handle-payment
     depends_on:
-      pg-donation-service:
+      pg:
         condition: service_healthy
       init-services:
         condition: service_completed_successfully
@@ -256,7 +228,7 @@ services:
       JWT_SECRET: "supersecretkey1233456"
       CORS_ORIGINS: "*"
       CORS_ALLOW_CREDENTIALS: "true"
-      DB_DSN: "postgres://postgres:postgres@pg-chat-service:5432/chatdb?sslmode=disable"
+      DB_DSN: "postgres://admin:123456@pg:5432/chatdb?sslmode=disable"
 
       KAFKA_BROKERS: kafka:9092
       KAFKA_CHAT_CONSUMER_GROUP: chat-service-group
@@ -264,6 +236,8 @@ services:
     ports:
       - "8001:8001"
     depends_on:
+      pg:
+        condition: service_healthy
       init-services:
         condition: service_completed_successfully
     labels:
@@ -332,7 +306,7 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      pg-channel-service:
+      pg:
         condition: service_healthy
     environment:
       GROUP_ID: 1
@@ -405,4 +379,5 @@ services:
       timeout: 20s
       retries: 3
   
-
+volumes:
+  ome_recordings:

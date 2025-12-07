@@ -85,7 +85,7 @@ func (c *categoryRepository) GetCategoryBySearchText(ctx context.Context, search
 	} else {
 		query["sort"] = []map[string]interface{}{
 			{
-				"id": "desc",
+				"created_at": "desc",
 			},
 		}
 	}

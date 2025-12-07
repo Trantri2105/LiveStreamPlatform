@@ -164,6 +164,19 @@
                                 <TempStoragePath>/tmp/ome_dvr/</TempStoragePath>
                                 <MaxDuration>1800</MaxDuration>
                             </DVR>
+
+                            <Dumps>
+                                <Dump>
+                                    <Enable>true</Enable>
+                                    <TargetStreamName>*</TargetStreamName>
+
+                                    <Playlists>
+                                        <Playlist>master.m3u8</Playlist>
+                                    </Playlists>
+
+                                    <OutputPath>/mnt/recordings/${AppName}/${StreamName}</OutputPath>
+                                </Dump>
+                            </Dumps>
                         </LLHLS>
                     </Publishers>
                 </Application>

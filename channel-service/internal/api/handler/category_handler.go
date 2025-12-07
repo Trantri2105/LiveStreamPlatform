@@ -85,8 +85,10 @@ func (ca *categoryHandler) GetCategoryByID() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, response.CategoryResponse{
-			ID:    category.ID,
-			Title: category.Title,
+			ID:        category.ID,
+			Title:     category.Title,
+			CreatedAt: category.CreatedAt,
+			UpdatedAt: category.UpdatedAt,
 		})
 	}
 }
@@ -117,8 +119,10 @@ func (ca *categoryHandler) GetCategoryBySearchText() gin.HandlerFunc {
 		categoriesRes := make([]response.CategoryResponse, 0)
 		for _, category := range categories {
 			categoriesRes = append(categoriesRes, response.CategoryResponse{
-				ID:    category.ID,
-				Title: category.Title,
+				ID:        category.ID,
+				Title:     category.Title,
+				CreatedAt: category.CreatedAt,
+				UpdatedAt: category.UpdatedAt,
 			})
 		}
 		c.JSON(http.StatusOK, categoriesRes)

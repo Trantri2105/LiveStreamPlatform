@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -136,6 +137,9 @@ func (s *streamHandler) CreateStream() gin.HandlerFunc {
 				ID:    newStream.CategoryID,
 				Title: newStream.CategoryTitle,
 			},
+			RecordURL: newStream.RecordURL,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		})
 	}
 }
@@ -180,6 +184,9 @@ func (s *streamHandler) GetStreamByID() gin.HandlerFunc {
 				ID:    stream.CategoryID,
 				Title: stream.CategoryTitle,
 			},
+			RecordURL: stream.RecordURL,
+			CreatedAt: stream.CreatedAt,
+			UpdatedAt: stream.UpdatedAt,
 		})
 	}
 }
@@ -245,6 +252,9 @@ func (s *streamHandler) GetStreamByChannelID() gin.HandlerFunc {
 					ID:    stream.CategoryID,
 					Title: stream.CategoryTitle,
 				},
+				RecordURL: stream.RecordURL,
+				CreatedAt: stream.CreatedAt,
+				UpdatedAt: stream.UpdatedAt,
 			})
 
 		}
@@ -300,6 +310,9 @@ func (s *streamHandler) GetStreamBySearchText() gin.HandlerFunc {
 					ID:    stream.CategoryID,
 					Title: stream.CategoryTitle,
 				},
+				RecordURL: stream.RecordURL,
+				CreatedAt: stream.CreatedAt,
+				UpdatedAt: stream.UpdatedAt,
 			})
 
 		}

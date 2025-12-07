@@ -102,7 +102,7 @@ func (s *streamRepository) GetStreamByChannelID(ctx context.Context, channelID s
 		"size": limit,
 		"sort": []map[string]interface{}{
 			{
-				"id": "desc",
+				"created_at": "desc",
 			},
 		},
 	}
@@ -199,7 +199,7 @@ func (s *streamRepository) GetStreamBySearchText(ctx context.Context, searchText
 	if searchText == "" {
 		body["sort"] = []map[string]interface{}{
 			{
-				"id": "desc",
+				"created_at": "desc",
 			},
 		}
 	}

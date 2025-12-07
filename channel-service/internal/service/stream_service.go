@@ -39,6 +39,7 @@ type streamService struct {
 	minioClient     *minio.Client
 	srtServerURL    string
 	hlsServerURL    string
+	recordServerURL string
 }
 
 func (s *streamService) getThumbnailID(streamID string) string {
@@ -179,6 +180,7 @@ func (s *streamService) CreateStream(ctx context.Context, stream model.Stream, u
 	stream.SrtServerURL = s.srtServerURL
 	stream.StreamKey = fmt.Sprintf("default/app/%s", stream.ID)
 	stream.HlsURL = fmt.Sprintf("%s/app/%s/master.m3u8", s.hlsServerURL, stream.ID)
+	stream.RecordURL = fmt.Sprintf("%s/app/%s/master.m3u8", s.recordServerURL, stream.ID)
 	stream.Status = model.StatusStreamInit
 	roomChatUrl, err := s.chatClient.CreateRoomChat(ctx, userToken, stream.ID, "/api/chat/thread")
 	if err != nil {
@@ -227,13 +229,14 @@ func (s *streamService) GetStreamBySearchText(ctx context.Context, searchText st
 	return streams, nil
 }
 
-func NewStreamService(channelService ChannelService, categoryService CategoryService, streamRepo repo.StreamRepository, srtServerURL string, hlsServerUrl string, chatClient client.ChatClient, txManager repo.TransactionManager, logger *zap.Logger, minioClient *minio.Client) StreamService {
+func NewStreamService(channelService ChannelService, categoryService CategoryService, streamRepo repo.StreamRepository, srtServerURL string, hlsServerUrl string, recordServerUrl string, chatClient client.ChatClient, txManager repo.TransactionManager, logger *zap.Logger, minioClient *minio.Client) StreamService {
 	return &streamService{
 		channelService:  channelService,
 		categoryService: categoryService,
 		streamRepo:      streamRepo,
 		srtServerURL:    srtServerURL,
 		hlsServerURL:    hlsServerUrl,
+		recordServerURL: recordServerUrl,
 		chatClient:      chatClient,
 		txManager:       txManager,
 		logger:          logger,

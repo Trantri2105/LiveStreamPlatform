@@ -10,6 +10,9 @@
       "hls_url": {
         "type": "keyword"
       },
+      "record_url": {
+        "type": "keyword"
+      },
       "live_chat_url": {
         "type": "keyword"
       },
@@ -36,6 +39,12 @@
       },
       "category_title": {
         "type": "text"
+      },
+      "created_at": {
+        "type": "date"
+      },
+      "updated_at": {
+        "type": "date"
       }
     }
   }

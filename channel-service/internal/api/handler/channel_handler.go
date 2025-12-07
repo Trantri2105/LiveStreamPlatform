@@ -229,6 +229,8 @@ func (ch *channelHandler) GetChannelFollower() gin.HandlerFunc {
 				BackgroundURL:     channel.BackgroundURL,
 				SubscriptionCount: channel.SubscriptionCount,
 				IsLive:            channel.IsLive,
+				UpdatedAt:         channel.UpdatedAt,
+				CreatedAt:         channel.CreatedAt,
 			}
 		}
 		c.JSON(http.StatusOK, channelRes)
@@ -278,6 +280,8 @@ func (ch *channelHandler) GetFollowingChannel() gin.HandlerFunc {
 				BackgroundURL:     channel.BackgroundURL,
 				SubscriptionCount: channel.SubscriptionCount,
 				IsLive:            channel.IsLive,
+				UpdatedAt:         channel.UpdatedAt,
+				CreatedAt:         channel.CreatedAt,
 			}
 		}
 		c.JSON(http.StatusOK, channelRes)
@@ -350,6 +354,8 @@ func (ch *channelHandler) GetChannelBySearchText() gin.HandlerFunc {
 				BackgroundURL:     channel.BackgroundURL,
 				SubscriptionCount: channel.SubscriptionCount,
 				IsLive:            channel.IsLive,
+				UpdatedAt:         channel.UpdatedAt,
+				CreatedAt:         channel.CreatedAt,
 			})
 		}
 		c.JSON(http.StatusOK, channelRes)
@@ -461,6 +467,8 @@ func (ch *channelHandler) GetChannelByID() gin.HandlerFunc {
 			BackgroundURL:     channel.BackgroundURL,
 			SubscriptionCount: channel.SubscriptionCount,
 			IsLive:            channel.IsLive,
+			CreatedAt:         channel.CreatedAt,
+			UpdatedAt:         channel.UpdatedAt,
 		})
 	}
 }

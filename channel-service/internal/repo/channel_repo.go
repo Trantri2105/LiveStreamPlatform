@@ -176,7 +176,7 @@ func (c *channelRepository) GetChannelBySearchText(ctx context.Context, searchTe
 	} else {
 		query["sort"] = []map[string]interface{}{
 			{
-				"id": "desc",
+				"created_at": "desc",
 			},
 		}
 	}

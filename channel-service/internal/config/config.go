@@ -14,10 +14,11 @@ type AppConfig struct {
 }
 
 type ServerConfig struct {
-	Port          string `envconfig:"SERVER_PORT" default:"8080"`
-	ChatServerUrl string `envconfig:"SERVER_CHAT_SERVER_URL" required:"true"`
-	SrtServerUrl  string `envconfig:"SERVER_SRT_SERVER_URL" required:"true"`
-	HlsServerUrl  string `envconfig:"SERVER_HLS_SERVER_URL" required:"true"`
+	Port            string `envconfig:"SERVER_PORT" default:"8080"`
+	ChatServerUrl   string `envconfig:"SERVER_CHAT_SERVER_URL" required:"true"`
+	SrtServerUrl    string `envconfig:"SERVER_SRT_SERVER_URL" required:"true"`
+	HlsServerUrl    string `envconfig:"SERVER_HLS_SERVER_URL" required:"true"`
+	RecordServerUrl string `envconfig:"SERVER_RECORD_SERVER_URL" required:"true"`
 }
 
 type PostgresConfig struct {

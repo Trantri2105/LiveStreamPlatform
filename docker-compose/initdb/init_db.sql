@@ -1,4 +1,21 @@
 ALTER SYSTEM SET wal_level = logical;
+CREATE DATABASE auth;
+\c auth
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT,
+    role TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+INSERT INTO users (email, password, first_name, last_name,role, created_at, updated_at)
+VALUES ('admin@gmail.com', '$2a$04$CHxMEXL8vezb4FCk9BoHMu4isGPn.6Md.8GQfbwyGDF5UESazaPKq', 'admin', 'admin','admin', NOW(), NOW());
+
 CREATE DATABASE channel;
 \c channel;
 CREATE TABLE channels (
@@ -98,4 +115,44 @@ INSERT INTO categories (title, created_at, updated_at) VALUES
 ('Speedrunning', NOW(), NOW()),
 ('Charity Streams', NOW(), NOW()),
 ('Other', NOW(), NOW());
+
+CREATE DATABASE donation;
+\c donation
+
+CREATE TABLE wallets (
+    channel_id TEXT PRIMARY KEY,
+    amount INT,
+    currency TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE TABLE donate_transactions (
+    id TEXT PRIMARY KEY,
+    channel_id TEXT REFERENCES wallets(channel_id),
+    stream_id TEXT,
+    amount INT,
+    donor_channel_id TEXT,
+    donate_message TEXT,
+    status TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE DATABASE notification;
+\c notification
+
+CREATE TABLE notifications (
+    id TEXT PRIMARY KEY,
+    channel_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    data JSONB NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE DATABASE chatdb;
 
