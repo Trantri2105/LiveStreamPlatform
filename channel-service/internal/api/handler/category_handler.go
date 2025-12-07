@@ -53,7 +53,7 @@ func (ca *categoryHandler) SetImage() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, response.Response{
-			Message: "thumbnail set successfully",
+			Message: "image set successfully",
 		})
 	}
 }
