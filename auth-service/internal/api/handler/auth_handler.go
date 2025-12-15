@@ -85,7 +85,7 @@ func (a *authHandler) Register() gin.HandlerFunc {
 			Email:     res.Email,
 			FirstName: res.FirstName,
 			LastName:  res.LastName,
-			Role:      res.Role,
+			Role:      res.Role.Name,
 		})
 	}
 }

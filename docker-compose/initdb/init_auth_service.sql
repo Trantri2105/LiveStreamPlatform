@@ -7,7 +7,7 @@ CREATE TABLE users (
     password TEXT NOT NULL,
     first_name TEXT,
     last_name TEXT,
-    role TEXT,
+    role_id TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );

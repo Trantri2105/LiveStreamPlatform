@@ -13,7 +13,8 @@ type User struct {
 	Password  string
 	FirstName string
 	LastName  string
-	Role      string
+	RoleID    string
+	Role      Role `gorm:"foreignkey:RoleID"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

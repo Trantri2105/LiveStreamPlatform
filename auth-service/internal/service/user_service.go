@@ -33,7 +33,7 @@ func (u *userService) GetUsers(ctx context.Context, userEmail string, sortOrder 
 }
 
 func (u *userService) CreateUser(ctx context.Context, user model.User) (model.User, error) {
-	user.Role = model.RoleUser
+	user.Role.Name = model.RoleUser
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return model.User{}, fmt.Errorf("UserService.Register hashing password err: %w", err)

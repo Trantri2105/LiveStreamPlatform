@@ -55,7 +55,7 @@ func (u *userHandler) GetMe() gin.HandlerFunc {
 			Email:     user.Email,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
-			Role:      user.Role,
+			Role:      user.Role.Name,
 		}
 		c.JSON(http.StatusOK, userRes)
 	}
@@ -84,7 +84,7 @@ func (u *userHandler) GetUserByID() gin.HandlerFunc {
 			Email:     user.Email,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
-			Role:      user.Role,
+			Role:      user.Role.Name,
 		}
 		c.JSON(http.StatusOK, userRes)
 	}
@@ -232,7 +232,7 @@ func (u *userHandler) GetUsers() gin.HandlerFunc {
 				FirstName: user.FirstName,
 				LastName:  user.LastName,
 				Email:     user.Email,
-				Role:      user.Role,
+				Role:      user.Role.Name,
 			}
 		}
 		c.JSON(http.StatusOK, usersRes)

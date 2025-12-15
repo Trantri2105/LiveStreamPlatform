@@ -55,7 +55,7 @@ func (a *authService) Login(ctx context.Context, email, password string) (Authen
 	if err != nil {
 		return AuthenticationResponse{}, fmt.Errorf("authService.Login: %w", apperrors.ErrInvalidPassword)
 	}
-	accessToken, err := a.jwt.CreateAccessToken(user.ID, user.Role)
+	accessToken, err := a.jwt.CreateAccessToken(user.ID, user.Role.Name)
 	if err != nil {
 		return AuthenticationResponse{}, fmt.Errorf("authService.Login: %w", err)
 	}
@@ -105,7 +105,7 @@ func (a *authService) Refresh(ctx context.Context, refreshToken string) (Authent
 	if err != nil {
 		return AuthenticationResponse{}, fmt.Errorf("authService.Refresh: %w", err)
 	}
-	accessToken, err := a.jwt.CreateAccessToken(user.ID, user.Role)
+	accessToken, err := a.jwt.CreateAccessToken(user.ID, user.Role.Name)
 	if err != nil {
 		return AuthenticationResponse{}, fmt.Errorf("AuthService.Refresh: %w", err)
 	}

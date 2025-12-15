@@ -25,7 +25,14 @@ type userRepository struct {
 }
 
 func (u *userRepository) CreateUser(ctx context.Context, user model.User) (model.User, error) {
-	result := u.db.WithContext(ctx).Create(&user)
+	var role model.Role
+	result := u.db.WithContext(ctx).First(&role, "name = ?", user.Role.Name)
+	if result.Error != nil {
+		return model.User{}, result.Error
+	}
+	user.RoleID = role.ID
+	user.Role = role
+	result = u.db.WithContext(ctx).Create(&user)
 	if result.Error != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(result.Error, &pgErr) && pgErr.Code == "23505" {
@@ -40,7 +47,7 @@ func (u *userRepository) CreateUser(ctx context.Context, user model.User) (model
 
 func (u *userRepository) GetUserByEmail(ctx context.Context, email string) (model.User, error) {
 	var user model.User
-	result := u.db.WithContext(ctx).First(&user, "email = ?", email)
+	result := u.db.WithContext(ctx).Preload("Role").First(&user, "email = ?", email)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return user, fmt.Errorf("userRepository.GetUserByEmail: %w", apperrors.ErrUserNotFound)
@@ -73,7 +80,7 @@ func (u *userRepository) GetUsers(ctx context.Context, userEmail string, sortOrd
 		query = query.Where("email LIKE ?", userEmail+"%")
 	}
 	var users []model.User
-	err := query.Order(fmt.Sprintf("%s %s", "id", sortOrder)).Limit(limit).Offset(offset).Find(&users).Error
+	err := query.Preload("Role").Order(fmt.Sprintf("%s %s", "id", sortOrder)).Limit(limit).Offset(offset).Find(&users).Error
 	if err != nil {
 		return nil, fmt.Errorf("userRepository.GetUsersList: %w", err)
 	}
@@ -82,7 +89,7 @@ func (u *userRepository) GetUsers(ctx context.Context, userEmail string, sortOrd
 
 func (u *userRepository) GetUserByID(ctx context.Context, id string) (model.User, error) {
 	var user model.User
-	result := u.db.WithContext(ctx).First(&user, "id = ?", id)
+	result := u.db.WithContext(ctx).Preload("Role").First(&user, "id = ?", id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return user, fmt.Errorf("userRepository.GetUserByID: %w", apperrors.ErrUserNotFound)
