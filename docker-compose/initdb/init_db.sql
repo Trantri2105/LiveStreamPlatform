@@ -2,6 +2,13 @@ ALTER SYSTEM SET wal_level = logical;
 CREATE DATABASE auth;
 \c auth
 
+CREATE TABLE roles (
+                       id UUID PRIMARY KEY DEFAULT uuidv7(),
+                       name TEXT UNIQUE,
+                       created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                       updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
     email TEXT NOT NULL UNIQUE,
@@ -9,13 +16,6 @@ CREATE TABLE users (
     first_name TEXT,
     last_name TEXT,
     role_id UUID REFERENCES roles(id),
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
-);
-
-CREATE TABLE roles (
-    id UUID PRIMARY KEY DEFAULT uuidv7(),
-    name TEXT UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
