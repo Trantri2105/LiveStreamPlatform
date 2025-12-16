@@ -31,8 +31,8 @@ func (u *userRepository) CreateUser(ctx context.Context, user model.User) (model
 		return model.User{}, result.Error
 	}
 	user.RoleID = role.ID
-	user.Role = role
-	result = u.db.WithContext(ctx).Create(&user)
+        user.Role = model.Role{}
+	result = u.db.WithContext(ctx).Omit("Role").Create(&user)
 	if result.Error != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(result.Error, &pgErr) && pgErr.Code == "23505" {
