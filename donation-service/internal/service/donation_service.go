@@ -23,6 +23,7 @@ type DonationService interface {
 	GetReceiveDonateTransaction(ctx context.Context, channelID string, fromTime time.Time, toTime time.Time, limit, offset int) ([]model.DonateTransaction, error)
 	GetTransactionByID(ctx context.Context, transactionID string) (model.DonateTransaction, error)
 	GetDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error)
+	GetReceivedDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error)
 }
 
 type donationService struct {
@@ -35,6 +36,10 @@ type donationService struct {
 
 func (d *donationService) GetDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error) {
 	return d.donationRepo.GetDonationStats(fromDate, toDate, groupBy, channelID)
+}
+
+func (d *donationService) GetReceivedDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error) {
+	return d.donationRepo.GetReceivedDonationStats(fromDate, toDate, groupBy, channelID)
 }
 
 func (d *donationService) GetTransactionByID(ctx context.Context, transactionID string) (model.DonateTransaction, error) {

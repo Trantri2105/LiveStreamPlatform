@@ -26,12 +26,73 @@ type DonationHandler interface {
 	GetReceiveDonateTransaction() gin.HandlerFunc
 	GetTransactionByID() gin.HandlerFunc
 	GetDonationStats() gin.HandlerFunc
+	GetReceivedDonationStats() gin.HandlerFunc
 }
 
 type donationHandler struct {
 	donationService          service.DonationService
 	frontendRedirectVNPayURL string
 	logger                   *zap.Logger
+}
+
+func (d *donationHandler) GetReceivedDonationStats() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		channelID := c.GetHeader("X-User-Id")
+		var req struct {
+			FromTime string `json:"from_time" binding:"required,datetime=2006-01-02"`
+			ToTime   string `json:"to_time" binding:"required,datetime=2006-01-02"`
+			GroupBy  string `json:"group_by"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			var validatorError validator.ValidationErrors
+			if errors.As(err, &validatorError) {
+				c.JSON(http.StatusBadRequest, response.Response{
+					Message: d.formatValidationError(validatorError[0]),
+				})
+			} else {
+				c.JSON(http.StatusBadRequest, response.Response{
+					Message: "invalid request body",
+				})
+			}
+			return
+		}
+		startTime, err := time.Parse("2006-01-02", req.FromTime)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "Invalid start date",
+			})
+			return
+		}
+		endTime, err := time.Parse("2006-01-02", req.ToTime)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "invalid end date",
+			})
+			return
+		}
+		if endTime.Before(startTime) {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "invalid end date",
+			})
+			return
+		}
+		endTimeFinal := endTime.AddDate(0, 0, 1)
+		if req.GroupBy != "day" && req.GroupBy != "month" {
+			c.JSON(http.StatusBadRequest, response.Response{
+				Message: "invalid group by",
+			})
+			return
+		}
+		res, err := d.donationService.GetReceivedDonationStats(startTime, endTimeFinal, req.GroupBy, channelID)
+		if err != nil {
+			d.logger.Error(fmt.Sprintf("failed to get received donation statistics for channel %s", channelID), zap.Error(err))
+			c.JSON(http.StatusInternalServerError, response.Response{
+				Message: "internal server error",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, res)
+	}
 }
 
 func (d *donationHandler) GetDonationStats() gin.HandlerFunc {

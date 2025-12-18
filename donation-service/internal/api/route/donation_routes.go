@@ -13,6 +13,7 @@ func SetUpDonationRoutes(r *gin.Engine, h handler.DonationHandler) {
 	privateDonationRoutes.POST("/donate", h.GetDonateTransactions())
 	privateDonationRoutes.POST("/receive", h.GetReceiveDonateTransaction())
 	privateDonationRoutes.POST("/statistics", h.GetDonationStats())
+	privateDonationRoutes.POST("/received-statistics", h.GetReceivedDonationStats())
 
 	publicDonationRoutes := r.Group("/vnpay")
 	publicDonationRoutes.GET("/handle-payment", h.HandleVNPayResult())

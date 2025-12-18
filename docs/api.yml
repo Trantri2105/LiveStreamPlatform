@@ -1072,6 +1072,27 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatisticsResult'
+  /donations/received-statistics:
+    post:
+      tags: [ Donations ]
+      summary: Get received donate statistics transactions
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetDonateStatsRequest'
+      responses:
+        '200':
+          description: Donate statistics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StatisticsResult'
   /wallets/self:
     get:
       tags: [ Wallets ]

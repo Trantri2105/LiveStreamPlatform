@@ -23,6 +23,7 @@ type DonationRepository interface {
 	GetDonateTransactionByID(ctx context.Context, transactionID string) (model.DonateTransaction, error)
 	UpdateWalletAmount(ctx context.Context, walletID string, amount int64) error
 	GetDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error)
+	GetReceivedDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error)
 	WithTransaction(tx *gorm.DB) DonationRepository
 }
 
@@ -30,7 +31,7 @@ type donationRepository struct {
 	db *gorm.DB
 }
 
-func (d *donationRepository) GetDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error) {
+func (d *donationRepository) GetReceivedDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error) {
 	var results []model.StatisticResult
 	var dateFormat string
 
@@ -46,12 +47,35 @@ func (d *donationRepository) GetDonationStats(fromDate, toDate time.Time, groupB
 	err := d.db.Model(&model.DonateTransaction{}).
 		Select(dateFormat+" as time_period, SUM(amount) as total_amount").
 		Where("created_at >= ? AND created_at < ?", fromDate, toDate).
-		Where("status = ?", "SUCCESS").
+		Where("status = ?", "success").
 		Where("channel_id = ?", channelID).
 		Group("time_period").
 		Order("time_period ASC").
 		Scan(&results).Error
 
+	return results, err
+}
+
+func (d *donationRepository) GetDonationStats(fromDate, toDate time.Time, groupBy string, channelID string) ([]model.StatisticResult, error) {
+	var results []model.StatisticResult
+	var dateFormat string
+
+	switch groupBy {
+	case "month":
+		dateFormat = "TO_CHAR(created_at, 'YYYY-MM')"
+	case "day":
+		fallthrough
+	default:
+		dateFormat = "TO_CHAR(created_at, 'YYYY-MM-DD')"
+	}
+	err := d.db.Model(&model.DonateTransaction{}).
+		Select(dateFormat+" as time_period, SUM(amount) as total_amount").
+		Where("created_at >= ? AND created_at < ?", fromDate, toDate).
+		Where("status = ?", "success").
+		Where("donor_channel_id = ?", channelID).
+		Group("time_period").
+		Order("time_period ASC").
+		Scan(&results).Error
 	return results, err
 }
 
