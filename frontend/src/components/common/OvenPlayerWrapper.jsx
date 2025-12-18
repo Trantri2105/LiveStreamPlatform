@@ -49,7 +49,7 @@ const OvenPlayerWrapper = ({ streamUrl, poster }) => {
 
             const options = {
                 autoStart: true,
-                mute: true, // Bắt buộc mute để autoplay trên Chrome
+                mute: true,
                 image: poster,
                 sources: [
                     {
@@ -59,7 +59,6 @@ const OvenPlayerWrapper = ({ streamUrl, poster }) => {
                 ],
                 controls: true,
                 expandFullScreenUI: true,
-                // Config tối ưu buffer từ file tham khảo của bạn
                 hlsConfig: {
                     maxBufferLength: 30,
                     maxMaxBufferLength: 60,
@@ -87,26 +86,21 @@ const OvenPlayerWrapper = ({ streamUrl, poster }) => {
                 if (mounted) setError("Lỗi khởi tạo trình phát video.");
             }
         };
-
-        // 2. Hàm kiểm tra file .m3u8 có tồn tại không (Logic cốt lõi từ file tham khảo)
         const checkStreamReady = async () => {
             if (!streamUrl) return;
 
             try {
                 console.log(`Checking stream... Attempt ${attemptCount + 1}/${MAX_ATTEMPTS}`);
 
-                // Dùng method HEAD để chỉ kiểm tra header, tiết kiệm băng thông
                 const response = await fetch(streamUrl, { method: 'HEAD' });
 
                 if (response.ok) {
-                    // Stream đã có -> Tạo player ngay
                     createPlayer();
                 } else {
                     throw new Error(`Status ${response.status}`);
                 }
                 // eslint-disable-next-line no-unused-vars
             } catch (err) {
-                // Nếu lỗi (404 hoặc mạng), thử lại
                 if (attemptCount < MAX_ATTEMPTS && mounted) {
                     attemptCount++;
                     setStatusMessage(`Đang đợi tín hiệu livestream... (${attemptCount}/${MAX_ATTEMPTS})`);

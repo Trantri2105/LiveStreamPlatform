@@ -194,7 +194,7 @@ services:
       POSTGRES_DB: donation
 
       SERVER_PORT: 8080
-      SERVER_FRONTEND_REDIRECT_URL: "http://localhost:5173/payment-result"
+      SERVER_FRONTEND_REDIRECT_URL: "http://128.199.90.123:5173/payment-result"
 
       KAFKA_BROKERS: kafka:9092
       KAFKA_CHANNEL_TOPIC: channel-svc.public.channels
