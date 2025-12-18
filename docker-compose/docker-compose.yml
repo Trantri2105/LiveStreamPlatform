@@ -356,6 +356,15 @@ services:
       - ./setup:/setup
     command: [ "bash", "/setup/setup.sh" ]
 
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    image: frontend
+    ports:
+    - "5173:80"
+    restart: unless-stopped
+
   minio:
     image: quay.io/minio/minio:latest
     ports:
