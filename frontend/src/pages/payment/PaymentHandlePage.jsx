@@ -90,3 +90,51 @@ const PaymentHandlePage = () => {
 };
 
 export default PaymentHandlePage;
+
+
+/*
+INSERT INTO donate_transactions (
+    id,
+    channel_id,
+    stream_id,
+    amount,
+    donor_channel_id,
+    donate_message,
+    status,
+    created_at,
+    updated_at
+)
+SELECT
+    -- 1. Tạo ID ngẫu nhiên (UUID cast về Text)
+    gen_random_uuid()::text,
+
+    -- 2. Channel ID cố định của bạn
+     '019b31fb-d113-79d2-b694-85460590abe5',
+
+    -- 3. Stream ID giả
+    'stream-' || floor(random() * 100)::text,
+
+    -- 4. Amount ngẫu nhiên (từ 10000 đến 510000)
+    (floor(random() * 50) * 10000 + 10000)::int,
+
+    -- 5. Donor ID giả
+    '019b31fb-d113-79d2-b694-85460590abe5',
+
+    -- 6. Message ngẫu nhiên
+    'Test donation message ' || md5(random()::text),
+
+    -- 7. Status: Random (90% tỉ lệ ra SUCCESS, 10% ra FAILED hoặc PENDING)
+    CASE
+        WHEN random() < 0.9 THEN 'success'
+        ELSE 'failed'
+    END,
+
+    -- 8. Thời gian: Chạy ngược từ 3 tháng trước đến hiện tại, mỗi bước 5 giờ
+    time_series,
+    time_series
+FROM generate_series(
+    NOW() - INTERVAL '3 months',  -- Bắt đầu từ 3 tháng trước
+    NOW(),                        -- Đến hiện tại
+    INTERVAL '5 hours'            -- Cách nhau 5 tiếng
+) as time_series;
+ */
