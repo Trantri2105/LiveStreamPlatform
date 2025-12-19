@@ -8,7 +8,7 @@ import Button from "../../components/common/Button.jsx";
 import Input from "../../components/common/Input.jsx";
 import {
     Edit3, X, Mail, Calendar, ChevronLeft,
-    Wallet, ImageIcon, CheckCircle, Users, Bell, BellOff, Play
+    Wallet, ImageIcon, Users, Bell, BellOff, Play
 } from "lucide-react";
 import { useToast} from "../../context/ToastContext.jsx";
 
@@ -169,6 +169,7 @@ const ProfilePage = () => {
         try {
             setLoading(true);
             await channelApi.update({ title, description: desc });
+            await new Promise(resolve => setTimeout(resolve, 1000));
             await refreshChannel();
             toast.success("Cập nhật thông tin kênh thành công.");
             setShowEditModal(false);
@@ -213,7 +214,6 @@ const ProfilePage = () => {
                         <div className="mb-2 pb-1">
                             <h1 className="text-3xl font-bold flex items-center gap-2 text-white drop-shadow-md">
                                 {channel?.title}
-                                <CheckCircle size={20} className="text-blue-400 fill-current" />
                             </h1>
                             <p className="text-gray-200 drop-shadow-md text-sm font-medium">
                                 @{user?.email?.split('@')[0] || 'user'} • {followersList.length || channel?.subscription_count || 0} người theo dõi

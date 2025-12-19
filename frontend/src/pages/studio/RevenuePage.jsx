@@ -139,6 +139,10 @@ const RevenuePage = () => {
                     rawData = await donateApi.getSent(params);
                     stats = await donateApi.getSentStatistics(statsParams);
                 }
+                if (!rawData || rawData.length === 0) {
+                    setHasMore(false);
+                    rawData = [];
+                }
 
                 const successTransactions = rawData.filter(tx => tx.status === 'success');
 
@@ -158,6 +162,8 @@ const RevenuePage = () => {
                 }));
 
                 setTransactions(enrichedData);
+                console.log("Check hehe", rawData.length)
+                console.log(rawData)
                 if (rawData.length < limit) setHasMore(false);
                 else setHasMore(true);
 
@@ -165,6 +171,7 @@ const RevenuePage = () => {
                 console.error(e);
                 setTransactions([]);
                 setChartData([]);
+                setHasMore(false);
             } finally {
                 setLoading(false);
             }
@@ -177,7 +184,7 @@ const RevenuePage = () => {
     const handleNextPage = () => { if (hasMore) { setOffset(prev => prev + limit); setPage(prev => prev + 1); } };
 
     const maxChartAmount = Math.max(...chartData.map(d => d.amount), 1);
-
+    const labelSkipInterval = chartData.length <= 10 ? 1 : Math.ceil(chartData.length / 6);
     return (
         <div className="min-h-screen bg-gray-950 text-white p-8">
             <div className="max-w-5xl mx-auto">
@@ -255,35 +262,44 @@ const RevenuePage = () => {
                             {chartData.map((item, index) => {
                                 const heightPercent = (item.amount / maxChartAmount) * 100;
                                 const hasData = item.amount > 0;
-
+                                const isFirst = index === 0;
+                                const isLast = index === chartData.length - 1;
+                                let showLabel = (isFirst || isLast || (index % labelSkipInterval === 0));
+                                if (!isLast && index > chartData.length - 1 - Math.ceil(labelSkipInterval / 1.5) && showLabel) {
+                                    showLabel = false;
+                                }
                                 return (
                                     <div key={index} className="flex-1 flex flex-col items-center group relative h-full justify-end">
-                                        {/* Tooltip chỉ hiện khi có dữ liệu hoặc hover vào vùng trống vẫn hiện date nếu muốn (ở đây để khi có tiền mới hiện tooltip thì chuẩn hơn) */}
-                                        {hasData && (
-                                            <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs px-2 py-1 rounded border border-gray-700 whitespace-nowrap z-20 pointer-events-none shadow-lg font-bold">
-                                                {item.date}: {formatCurrency(item.amount)}
-                                            </div>
-                                        )}
+                                        <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs px-2 py-1 rounded border border-gray-700 whitespace-nowrap z-20 pointer-events-none shadow-lg font-bold left-1/2 -translate-x-1/2">
+                                            {item.date}: {formatCurrency(item.amount)}
+                                        </div>
 
                                         {/* Bar */}
                                         <div
-                                            className={`w-full rounded-t-sm transition-all duration-500 hover:opacity-80 cursor-pointer ${tab === 'revenue' ? 'bg-green-500' : 'bg-red-500'}`}
+                                            className={`w-[90%] rounded-t-sm transition-all duration-300 hover:opacity-80 cursor-pointer ${tab === 'revenue' ? 'bg-green-500' : 'bg-red-500'}`}
                                             style={{
                                                 height: `${heightPercent}%`,
-                                                minHeight: hasData ? '4px' : '0px',
+                                                minHeight: hasData ? '4px' : '0px', // Vẫn giữ 1 chút chiều cao nếu có tiền để dễ click
                                                 opacity: hasData ? 1 : 0
                                             }}
                                         ></div>
 
                                         {/* X-Axis Label - Ẩn nếu không có tiền */}
-                                        <div className="h-4 w-full mt-2 flex justify-center">
-                                            <span
-                                                className="text-[10px] text-gray-400 text-center tracking-tighter whitespace-nowrap block w-full overflow-hidden"
-                                                style={{fontSize: '10px'}}
-                                            >
-                                                {/* Logic chính: Nếu > 0 mới hiện ngày */}
-                                                {hasData ? item.date : ''}
-                                            </span>
+                                        <div className="h-4 w-full mt-2 flex justify-center relative">
+                                            {showLabel && (
+                                                <span
+                                                    className={`text-[10px] text-gray-400 text-center whitespace-nowrap absolute top-0 
+                                                        ${isFirst ? 'left-0 text-left origin-bottom-left' : ''}
+                                                        ${isLast ? 'right-0 text-right origin-bottom-right' : ''}
+                                                        ${!isFirst && !isLast ? 'left-1/2 -translate-x-1/2' : ''}
+                                                    `}
+                                                >
+                                                    {item.date}
+                                                </span>
+                                            )}
+                                            {!showLabel && (
+                                                <span className="w-0.5 h-1 bg-gray-800 absolute top-0"></span>
+                                            )}
                                         </div>
                                     </div>
                                 );

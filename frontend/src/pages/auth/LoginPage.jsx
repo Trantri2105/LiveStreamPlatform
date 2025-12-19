@@ -59,10 +59,6 @@ const LoginPage = () => {
                         required
                     />
 
-                    <div className="flex justify-end mb-4">
-                        <a href="#" className="text-xs text-violet-400 hover:text-violet-300">Quên mật khẩu?</a>
-                    </div>
-
                     <Button
                         type="submit"
                         className="w-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20"
