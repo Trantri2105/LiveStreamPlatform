@@ -8,7 +8,7 @@ services:
       - "--providers.docker.exposedbydefault=false"
     ports:
       - "8081:8081"
-      - "8080:8080"
+      - "8080:8080" # Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -21,7 +21,8 @@ services:
       BASE_URL: /docs
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.swagger-router.rule=PathPrefix(`/docs`)"
+      - "traefik.http.routers.swagger-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/docs`)"
+      - "traefik.http.routers.swagger-router.entrypoints=web"
       - "traefik.http.services.swagger-service.loadbalancer.server.port=8080"
 
   ome:
@@ -31,9 +32,7 @@ services:
       - ./ovm-conf/Server.xml:/opt/ovenmediaengine/bin/origin_conf/Server.xml
       - ome_recordings:/mnt/recordings
     ports:
-      # SRT ingest
       - "9999:9999/udp"
-      # LL-HLS HTTP
       - "3333:3333"
     restart: unless-stopped
 
@@ -42,9 +41,11 @@ services:
     container_name: nginx-vod
     ports:
       - "3334:80"
+      - "8443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       - ome_recordings:/usr/share/nginx/html/recordings
+      - /opt/docker-certs:/etc/nginx/certs
     depends_on:
       - ome
     restart: always
@@ -81,14 +82,11 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: auth
-
       SERVER_PORT: 8080
       USER_SESSION_TTL: 720h
-
       JWT_SECRET_KEY: supersecretkey1233456
       JWT_ACCESS_TOKEN_TTL: 24h
       JWT_REFRESH_TOKEN_TTL: 168h
-
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
@@ -98,8 +96,10 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth-router.rule=PathPrefix(`/auth`)"
-      - "traefik.http.routers.user-router.rule=PathPrefix(`/users`)"
+      - "traefik.http.routers.auth-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth-router.entrypoints=web"
+      - "traefik.http.routers.user-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/users`)"
+      - "traefik.http.routers.user-router.entrypoints=web"
       - "traefik.http.middlewares.custom-auth.forwardauth.address=http://auth-service:8080/auth/verify"
       - "traefik.http.middlewares.custom-auth.forwardauth.authResponseHeaders=X-User-Id,X-User-Role"
       - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
@@ -107,7 +107,6 @@ services:
       - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
       - "traefik.http.middlewares.cors.headers.accesscontrolallowheaders=*"
       - "traefik.http.middlewares.cors.headers.accesscontrolallowcredentials=true"
-      - "traefik.http.middlewares.cors.headers.addvaryheader=true"
       - "traefik.http.routers.auth-router.middlewares=cors"
       - "traefik.http.routers.user-router.middlewares=cors"
 
@@ -121,19 +120,15 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: channel
-
       SERVER_PORT: 8080
       SERVER_CHAT_SERVER_URL: http://chat-service:8001
       SERVER_SRT_SERVER_URL: srt://128.199.90.123:9999
-      SERVER_HLS_SERVER_URL: http://128.199.90.123:3333
-      SERVER_RECORD_SERVER_URL: http://128.199.90.123:3334
-
+      SERVER_HLS_SERVER_URL: https://thanhserver123.me
+      SERVER_RECORD_SERVER_URL: https://thanhserver123.me/recordings
       ELASTICSEARCH_ADDRESSES: http://es:9200
-
-      MINIO_ENDPOINT: 128.199.90.123:9000
+      MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: admin12345
-
       KAFKA_BROKERS: kafka:9092
       KAFKA_TOPIC: notification-events
     depends_on:
@@ -145,15 +140,19 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.channel-router.rule=PathPrefix(`/channels`)"
+      - "traefik.http.routers.channel-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/channels`)"
+      - "traefik.http.routers.channel-router.entrypoints=web"
       - "traefik.http.routers.channel-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.stream-router.rule=PathPrefix(`/streams`)"
+      - "traefik.http.routers.stream-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/streams`)"
+      - "traefik.http.routers.stream-router.entrypoints=web"
       - "traefik.http.routers.stream-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.category-router.rule=PathPrefix(`/categories`)"
+      - "traefik.http.routers.category-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/categories`)"
+      - "traefik.http.routers.category-router.entrypoints=web"
       - "traefik.http.routers.category-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.public-router.rule=PathPrefix(`/public`)"
-      - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
+      - "traefik.http.routers.public-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/public`)"
+      - "traefik.http.routers.public-router.entrypoints=web"
       - "traefik.http.routers.public-router.middlewares=cors"
+      - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
 
   notification-service:
     build:
@@ -165,9 +164,7 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: notification
-
       SERVER_PORT: 8080
-
       KAFKA_BROKERS: kafka:9092
       KAFKA_GROUP_ID: notification-consumers
       KAFKA_TOPIC: notification-events
@@ -178,7 +175,8 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.notification-router.rule=PathPrefix(`/notifications`)"
+      - "traefik.http.routers.notification-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/notifications`)"
+      - "traefik.http.routers.notification-router.entrypoints=web"
       - "traefik.http.routers.notification-router.middlewares=cors,custom-auth"
       - "traefik.http.services.notification-service.loadbalancer.server.port=8080"
 
@@ -192,9 +190,8 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: donation
-
       SERVER_PORT: 8080
-      SERVER_FRONTEND_REDIRECT_URL: "http://128.199.90.123:5173/payment-result"
+      SERVER_FRONTEND_REDIRECT_URL: "https://thanhserver123.me/payment-result"
 
       KAFKA_BROKERS: kafka:9092
       KAFKA_CHANNEL_TOPIC: channel-svc.public.channels
@@ -204,7 +201,7 @@ services:
       VNPAY_TMN_CODE: 15ZMLXYR
       VNPAY_HASH_SECRET: RT19URTSYGGGZTLAHFGXZS8YASN7HIV0
       VNPAY_PAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-      VNPAY_RETURN_URL: http://128.199.90.123:8081/vnpay/handle-payment
+      VNPAY_RETURN_URL: https://thanhserver123.me/api/vnpay/handle-payment
     depends_on:
       pg:
         condition: service_healthy
@@ -212,11 +209,14 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.donation-router.rule=PathPrefix(`/donations`)"
+      - "traefik.http.routers.donation-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/donations`)"
+      - "traefik.http.routers.donation-router.entrypoints=web"
       - "traefik.http.routers.donation-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.wallet-router.rule=PathPrefix(`/wallets`)"
+      - "traefik.http.routers.wallet-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/wallets`)"
+      - "traefik.http.routers.wallet-router.entrypoints=web"
       - "traefik.http.routers.wallet-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.vnpay-router.rule=PathPrefix(`/vnpay`)"
+      - "traefik.http.routers.vnpay-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/vnpay`)"
+      - "traefik.http.routers.vnpay-router.entrypoints=web"
       - "traefik.http.routers.vnpay-router.middlewares=cors"
       - "traefik.http.services.donation-service.loadbalancer.server.port=8080"
 
@@ -230,7 +230,6 @@ services:
       CORS_ORIGINS: "*"
       CORS_ALLOW_CREDENTIALS: "true"
       DB_DSN: "postgres://admin:123456@pg:5432/chatdb?sslmode=disable"
-
       KAFKA_BROKERS: kafka:9092
       KAFKA_CHAT_CONSUMER_GROUP: chat-service-group
       KAFKA_PUBLISH_DONATE_TOPIC: donation-events
@@ -245,9 +244,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.chat-router.rule=PathPrefix(`/chat`)"
       - "traefik.http.routers.chat-router.entrypoints=web"
-      - "traefik.http.middlewares.chat-strip.stripprefix.prefixes=/chat"
-      - "traefik.http.middlewares.chat-addprefix.addprefix.prefix=/api/chat"
-      - "traefik.http.routers.chat-router.middlewares=chat-strip,chat-addprefix,cors,custom-auth"
       - "traefik.http.services.chat-service.loadbalancer.server.port=8001"
 
   moderation-service:
@@ -362,12 +358,12 @@ services:
       dockerfile: Dockerfile
     image: frontend
     ports:
-    - "80:80"
-    - "443:443"
+      - "80:80"
+      - "443:443"
     restart: unless-stopped
     volumes:
-    - /root/LiveStreamPlatform/docker-compose/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-    - /root/LiveStreamPlatform/docker-compose/nginx/certs:/etc/nginx/certs
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /opt/docker-certs:/etc/nginx/certs
 
   minio:
     image: quay.io/minio/minio:latest
@@ -385,7 +381,7 @@ services:
       retries: 3
     volumes:
       - minio_data:/data
-  
+
 volumes:
   ome_recordings:
   postgres_data:
