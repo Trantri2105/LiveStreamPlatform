@@ -43,7 +43,7 @@ services:
       - "3334:80"
       - "8443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/internal.conf:/etc/nginx/conf.d/default.conf
       - ome_recordings:/usr/share/nginx/html/recordings
       - /opt/docker-certs:/etc/nginx/certs
     depends_on:
@@ -124,7 +124,7 @@ services:
       SERVER_CHAT_SERVER_URL: http://chat-service:8001
       SERVER_SRT_SERVER_URL: srt://128.199.90.123:9999
       SERVER_HLS_SERVER_URL: https://thanhserver123.me
-      SERVER_RECORD_SERVER_URL: https://thanhserver123.me/recordings
+      SERVER_RECORD_SERVER_URL: https://thanhserver123.me
       ELASTICSEARCH_ADDRESSES: http://es:9200
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: admin
