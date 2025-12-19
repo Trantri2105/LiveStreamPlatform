@@ -362,8 +362,12 @@ services:
       dockerfile: Dockerfile
     image: frontend
     ports:
-    - "5173:80"
+    - "80:80"
+    - "443:443"
     restart: unless-stopped
+    volumes:
+    - /root/LiveStreamPlatform/docker-compose/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    - /root/LiveStreamPlatform/docker-compose/nginx/certs:/etc/nginx/certs
 
   minio:
     image: quay.io/minio/minio:latest
