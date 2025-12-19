@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { CHAT_API_URL } from '/src/utils/constants.js';
+import { CHAT_API_URL } from '../utils/constants.js';
 
 const chatAxiosClient = axios.create({
     baseURL: CHAT_API_URL,

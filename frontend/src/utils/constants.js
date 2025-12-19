@@ -1,3 +1,3 @@
-export const API_BASE_URL = "http://128.199.90.123:8081";
-export const CHAT_API_URL = "http://128.199.90.123:8001";
-export const WS_BASE_URL = "ws://128.199.90.123:8001/ws/chat";
+export const API_BASE_URL = "https://thanhserver123.me/api";
+export const CHAT_API_URL = "https://thanhserver123.me/api";
+export const WS_BASE_URL = "wss://thanhserver123.me/ws/chat";
