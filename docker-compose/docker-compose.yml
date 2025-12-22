@@ -300,7 +300,7 @@ services:
       test: [ "CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'" ]
       interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
       start_period: 30s
 
   kibana:
