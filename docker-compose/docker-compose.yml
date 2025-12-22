@@ -274,8 +274,10 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.chat-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/api/chat`)"
+      - "traefik.http.routers.chat-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/chat-service`)"
       - "traefik.http.routers.chat-router.entrypoints=websecure"
+      - "traefik.http.middlewares.strip-chat.stripprefix.prefixes=/chat-service"
+      - "traefik.http.routers.chat-router.middlewares=strip-chat,cors"
       - "traefik.http.routers.chat-router.tls=true"
       - "traefik.http.routers.ws-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/ws`)"
       - "traefik.http.routers.ws-router.entrypoints=websecure"
