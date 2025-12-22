@@ -274,7 +274,7 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.chat-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/chat`)"
+      - "traefik.http.routers.chat-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/api/chat`)"
       - "traefik.http.routers.chat-router.entrypoints=websecure"
       - "traefik.http.routers.chat-router.tls=true"
       - "traefik.http.routers.ws-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/ws`)"
