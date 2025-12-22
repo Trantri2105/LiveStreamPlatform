@@ -19,12 +19,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik/certs:/etc/traefik/certs
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml
-#    labels:
-#      - "traefik.enable=true"
-#      - "traefik.http.routers.dashboard.rule=Host(`thanhserver123.me`) && PathPrefix(`/dashboard/`)"
-#      - "traefik.http.routers.dashboard.service=api@internal"
-#      - "traefik.http.routers.dashboard.entrypoints=websecure"
-#      - "traefik.http.routers.dashboard.tls=true"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`thanhserver123.me`) && (PathPrefix(`/monitor`) || PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls=true"
 
   swagger-ui:
     image: swaggerapi/swagger-ui
