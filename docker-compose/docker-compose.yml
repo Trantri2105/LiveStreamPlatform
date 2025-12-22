@@ -30,7 +30,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.swagger-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/docs`)"
-      - "traefik.http.routers.swagger-router.entrypoints=webwebsecure"
+      - "traefik.http.routers.swagger-router.entrypoints=websecure"
       - "traefik.http.routers.swagger-router.tls=true"
       - "traefik.http.services.swagger-service.loadbalancer.server.port=8080"
 
@@ -46,7 +46,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ome-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/app`)"
-      - "traefik.http.routers.ome-router.entrypoints=webwebsecure"
+      - "traefik.http.routers.ome-router.entrypoints=websecure"
       - "traefik.http.routers.ome-router.tls=true"
       - "traefik.http.services.ome-service.loadbalancer.server.port=3333"
 
@@ -62,7 +62,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nginx-vod-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/recordings`)"
-      - "traefik.http.routers.nginx-vod-router.entrypoints=webwebsecure"
+      - "traefik.http.routers.nginx-vod-router.entrypoints=websecure"
       - "traefik.http.routers.nginx-vod-router.tls=true"
       - "traefik.http.services.nginx-vod-service.loadbalancer.server.port=80"
 
