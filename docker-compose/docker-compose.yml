@@ -2,15 +2,23 @@ services:
   traefik:
     image: traefik:v3.5
     command:
-      - "--api.insecure=true"
+      - "--log.level=INFO"
+      - "--api.insecure=false"
       - "--providers.docker=true"
-      - "--entrypoints.web.address=:8081"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.filename=/etc/traefik/dynamic.yml"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
     ports:
-      - "8081:8081"
-      - "8080:8080" # Dashboard
+      - "80:80"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/certs:/etc/traefik/certs
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml
 
   swagger-ui:
     image: swaggerapi/swagger-ui
@@ -22,7 +30,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.swagger-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/docs`)"
-      - "traefik.http.routers.swagger-router.entrypoints=web"
+      - "traefik.http.routers.swagger-router.entrypoints=webwebsecure"
+      - "traefik.http.routers.swagger-router.tls=true"
       - "traefik.http.services.swagger-service.loadbalancer.server.port=8080"
 
   ome:
@@ -33,22 +42,29 @@ services:
       - ome_recordings:/mnt/recordings
     ports:
       - "9999:9999/udp"
-      - "3333:3333"
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ome-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/app`)"
+      - "traefik.http.routers.ome-router.entrypoints=webwebsecure"
+      - "traefik.http.routers.ome-router.tls=true"
+      - "traefik.http.services.ome-service.loadbalancer.server.port=3333"
 
-  nginx:
+  nginx-vod:
     image: nginx:alpine
     container_name: nginx-vod
-    ports:
-      - "3334:80"
-      - "8443:443"
     volumes:
       - ./nginx/internal.conf:/etc/nginx/conf.d/default.conf
       - ome_recordings:/usr/share/nginx/html/recordings
-      - /opt/docker-certs:/etc/nginx/certs
     depends_on:
       - ome
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx-vod-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/recordings`)"
+      - "traefik.http.routers.nginx-vod-router.entrypoints=webwebsecure"
+      - "traefik.http.routers.nginx-vod-router.tls=true"
+      - "traefik.http.services.nginx-vod-service.loadbalancer.server.port=80"
 
   pg:
     image: postgres:18rc1
@@ -97,9 +113,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.auth-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/auth`)"
-      - "traefik.http.routers.auth-router.entrypoints=web"
+      - "traefik.http.routers.auth-router.entrypoints=websecure"
+      - "traefik.http.routers.auth-router.tls=true"
       - "traefik.http.routers.user-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/users`)"
-      - "traefik.http.routers.user-router.entrypoints=web"
+      - "traefik.http.routers.user-router.entrypoints=websecure"
+      - "traefik.http.routers.user-router.tls=true"
       - "traefik.http.middlewares.custom-auth.forwardauth.address=http://auth-service:8080/auth/verify"
       - "traefik.http.middlewares.custom-auth.forwardauth.authResponseHeaders=X-User-Id,X-User-Role"
       - "traefik.http.services.auth-service.loadbalancer.server.port=8080"
@@ -141,16 +159,20 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.channel-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/channels`)"
-      - "traefik.http.routers.channel-router.entrypoints=web"
+      - "traefik.http.routers.channel-router.entrypoints=websecure"
+      - "traefik.http.routers.channel-router.tls=true"
       - "traefik.http.routers.channel-router.middlewares=cors,custom-auth"
       - "traefik.http.routers.stream-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/streams`)"
-      - "traefik.http.routers.stream-router.entrypoints=web"
+      - "traefik.http.routers.stream-router.entrypoints=websecure"
+      - "traefik.http.routers.stream-router.tls=true"
       - "traefik.http.routers.stream-router.middlewares=cors,custom-auth"
       - "traefik.http.routers.category-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/categories`)"
-      - "traefik.http.routers.category-router.entrypoints=web"
+      - "traefik.http.routers.category-router.entrypoints=websecure"
+      - "traefik.http.routers.category-router.tls=true"
       - "traefik.http.routers.category-router.middlewares=cors,custom-auth"
       - "traefik.http.routers.public-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/public`)"
-      - "traefik.http.routers.public-router.entrypoints=web"
+      - "traefik.http.routers.public-router.entrypoints=websecure"
+      - "traefik.http.routers.public-router.tls=true"
       - "traefik.http.routers.public-router.middlewares=cors"
       - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
 
@@ -176,7 +198,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.notification-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/notifications`)"
-      - "traefik.http.routers.notification-router.entrypoints=web"
+      - "traefik.http.routers.notification-router.entrypoints=websecure"
+      - "traefik.http.routers.notification-router.tls=true"
       - "traefik.http.routers.notification-router.middlewares=cors,custom-auth"
       - "traefik.http.services.notification-service.loadbalancer.server.port=8080"
 
@@ -201,7 +224,7 @@ services:
       VNPAY_TMN_CODE: 15ZMLXYR
       VNPAY_HASH_SECRET: RT19URTSYGGGZTLAHFGXZS8YASN7HIV0
       VNPAY_PAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-      VNPAY_RETURN_URL: https://thanhserver123.me/api/vnpay/handle-payment
+      VNPAY_RETURN_URL: https://thanhserver123.me/vnpay/handle-payment
     depends_on:
       pg:
         condition: service_healthy
@@ -210,13 +233,16 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.donation-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/donations`)"
-      - "traefik.http.routers.donation-router.entrypoints=web"
+      - "traefik.http.routers.donation-router.entrypoints=websecure"
+      - "traefik.http.routers.donation-router.tls=true"
       - "traefik.http.routers.donation-router.middlewares=cors,custom-auth"
       - "traefik.http.routers.wallet-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/wallets`)"
-      - "traefik.http.routers.wallet-router.entrypoints=web"
+      - "traefik.http.routers.wallet-router.entrypoints=websecure"
+      - "traefik.http.routers.wallet-router.tls=true"
       - "traefik.http.routers.wallet-router.middlewares=cors,custom-auth"
       - "traefik.http.routers.vnpay-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/vnpay`)"
-      - "traefik.http.routers.vnpay-router.entrypoints=web"
+      - "traefik.http.routers.vnpay-router.entrypoints=websecure"
+      - "traefik.http.routers.vnpay-router.tls=true"
       - "traefik.http.routers.vnpay-router.middlewares=cors"
       - "traefik.http.services.donation-service.loadbalancer.server.port=8080"
 
@@ -242,8 +268,10 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.chat-router.rule=PathPrefix(`/chat`)"
-      - "traefik.http.routers.chat-router.entrypoints=web"
+      - "traefik.http.routers.chat-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/chat`)"
+      - "traefik.http.routers.chat-router.entrypoints=websecure"
+      - "traefik.http.routers.ws-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.ws-router.entrypoints=websecure"
       - "traefik.http.services.chat-service.loadbalancer.server.port=8001"
 
   moderation-service:
