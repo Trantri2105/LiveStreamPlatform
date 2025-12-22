@@ -21,12 +21,10 @@ services:
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`thanhserver123.me`)"
+      - "traefik.http.routers.dashboard.rule=Host(`thanhserver123.me`) && PathPrefix(`/dashboard/`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.middlewares.monitor-auth.basicauth.users=admin:$$apr1$$EMI2lFa2$$HYqxlOw/iL.3M0i/eGgLr0"
       - "traefik.http.routers.dashboard.tls=true"
-      - "traefik.http.routers.dashboard.middlewares=monitor-auth"
 
   swagger-ui:
     image: swaggerapi/swagger-ui
@@ -152,7 +150,7 @@ services:
       SERVER_HLS_SERVER_URL: https://thanhserver123.me:444
       SERVER_RECORD_SERVER_URL: https://thanhserver123.me:444
       ELASTICSEARCH_ADDRESSES: http://es:9200
-      MINIO_ENDPOINT: thanhserver123.me:444/minio
+      MINIO_ENDPOINT: thanhserver123.me:444
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: admin12345
       KAFKA_BROKERS: kafka:9092
@@ -419,11 +417,9 @@ services:
       - minio_data:/data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minio.rule=Host(`thanhserver123.me`) && PathPrefix(`/minio`)"
+      - "traefik.http.routers.minio.rule=Host(`thanhserver123.me`)"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls=true"
-      - "traefik.http.middlewares.strip-minio.stripprefix.prefixes=/minio"
-      - "traefik.http.routers.my-app.middlewares=strip-minio"
       - "traefik.http.services.minio-server.loadbalancer.server.port=9000"
 
 volumes:
