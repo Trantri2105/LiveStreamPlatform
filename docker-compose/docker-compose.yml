@@ -181,8 +181,6 @@ services:
       - "traefik.http.routers.public-router.tls=true"
       - "traefik.http.routers.public-router.middlewares=cors"
       - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
-    extra_hosts:
-      - "thanhserver123.me:traefik"
 
   notification-service:
     build:
