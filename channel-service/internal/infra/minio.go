@@ -11,6 +11,7 @@ func NewMinioClient(cfg config.MinioConfig) (*minio.Client, error) {
 	minioClient, err := minio.New(cfg.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
 		Secure: true,
+		Region: "us-east-1",
 	})
 	if err != nil {
 		return nil, err
