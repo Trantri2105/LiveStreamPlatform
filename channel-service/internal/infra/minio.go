@@ -10,7 +10,7 @@ import (
 func NewMinioClient(cfg config.MinioConfig) (*minio.Client, error) {
 	minioClient, err := minio.New(cfg.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
-		Secure: false,
+		Secure: true,
 	})
 	if err != nil {
 		return nil, err
