@@ -19,12 +19,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik/certs:/etc/traefik/certs
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`thanhserver123.me`) && PathPrefix(`/dashboard/`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.tls=true"
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.routers.dashboard.rule=Host(`thanhserver123.me`) && PathPrefix(`/dashboard/`)"
+#      - "traefik.http.routers.dashboard.service=api@internal"
+#      - "traefik.http.routers.dashboard.entrypoints=websecure"
+#      - "traefik.http.routers.dashboard.tls=true"
 
   swagger-ui:
     image: swaggerapi/swagger-ui
@@ -401,9 +401,6 @@ services:
 
   minio:
     image: quay.io/minio/minio:latest
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin12345
@@ -420,7 +417,8 @@ services:
       - "traefik.http.routers.minio.rule=Host(`thanhserver123.me`)"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls=true"
-      - "traefik.http.services.minio-server.loadbalancer.server.port=9000"
+      - "traefik.http.routers.minio.service=minio-api-svc"
+      - "traefik.http.services.minio-api-svc.loadbalancer.server.port=9000"
 
 volumes:
   ome_recordings:
