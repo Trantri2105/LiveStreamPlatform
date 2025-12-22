@@ -2,7 +2,7 @@ import chatAxiosClient from "./chatAxiosClient.js";
 
 const chatApi={
     getHistory(streamId){
-        return chatAxiosClient.get(`/thread/${streamId}/messages`);
+        return chatAxiosClient.get(`chat/thread/${streamId}/messages`);
     },
 
 }

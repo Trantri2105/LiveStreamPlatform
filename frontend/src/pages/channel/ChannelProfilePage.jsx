@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import channelApi from "../../api/channelApi.js";
 import streamApi from "../../api/streamApi.js";
 import Button from "../../components/common/Button.jsx";
-import { CheckCircle, Mail, Calendar, ChevronLeft, Bell, BellOff, Heart, PlayCircle, Clock } from "lucide-react";
+import {Calendar, ChevronLeft, Bell, BellOff, Heart, PlayCircle, Clock } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useToast } from "../../context/ToastContext.jsx";
 
@@ -143,7 +143,6 @@ const ChannelProfilePage = () => {
                         <div className="mb-2 pb-1">
                             <h1 className="text-3xl font-bold flex items-center gap-2 text-white drop-shadow-md">
                                 {channelData.title}
-                                <CheckCircle size={20} className="text-blue-400 fill-current" />
                             </h1>
                             <p className="text-gray-200 drop-shadow-md text-sm font-medium">
                                 {channelData.subscription_count || 0} người theo dõi

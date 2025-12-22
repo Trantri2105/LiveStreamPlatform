@@ -109,7 +109,7 @@ SELECT
     gen_random_uuid()::text,
 
     -- 2. Channel ID cố định của bạn
-     '019b36ae-1ac4-7286-8b60-d8f0b122328d',
+     '019b3747-360f-7aa0-a1c7-6465ff095e7c',
 
     -- 3. Stream ID giả
     'stream-' || floor(random() * 100)::text,
@@ -118,7 +118,7 @@ SELECT
     (floor(random() * 50) * 10000 + 10000)::int,
 
     -- 5. Donor ID giả
-    '019b36ae-1ac4-7286-8b60-d8f0b122328d',
+    '019b3747-360f-7aa0-a1c7-6465ff095e7c',
 
     -- 6. Message ngẫu nhiên
     'Test donation message ' || md5(random()::text),
