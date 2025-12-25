@@ -29,7 +29,10 @@ func EnsureBucket(client *minio.Client, bucketName string) error {
 	defer cancel()
 	exists, err := client.BucketExists(ctx, bucketName)
 	if err != nil {
-		return err
+		errResp := minio.ToErrorResponse(err)
+		if errResp.Code != "NoSuchBucket" {
+			return err
+		}
 	}
 	if !exists {
 		err = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
