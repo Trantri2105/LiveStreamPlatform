@@ -21,7 +21,7 @@ services:
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`thanhserver123.me`) && (PathPrefix(`/monitor`) || PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
+      - "traefik.http.routers.dashboard.rule=Host(`livehub.website`) && (PathPrefix(`/monitor`) || PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls=true"
@@ -35,7 +35,7 @@ services:
       BASE_URL: /docs
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.swagger-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/docs`)"
+      - "traefik.http.routers.swagger-router.rule=Host(`livehub.website`) && PathPrefix(`/docs`)"
       - "traefik.http.routers.swagger-router.entrypoints=websecure"
       - "traefik.http.routers.swagger-router.tls=true"
       - "traefik.http.services.swagger-service.loadbalancer.server.port=8080"
@@ -51,7 +51,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ome-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/app`)"
+      - "traefik.http.routers.ome-router.rule=Host(`livehub.website`) && PathPrefix(`/app`)"
       - "traefik.http.routers.ome-router.entrypoints=websecure"
       - "traefik.http.routers.ome-router.tls=true"
       - "traefik.http.services.ome-service.loadbalancer.server.port=3333"
@@ -67,7 +67,7 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nginx-vod-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/recordings`)"
+      - "traefik.http.routers.nginx-vod-router.rule=Host(`livehub.website`) && PathPrefix(`/recordings`)"
       - "traefik.http.routers.nginx-vod-router.entrypoints=websecure"
       - "traefik.http.routers.nginx-vod-router.tls=true"
       - "traefik.http.services.nginx-vod-service.loadbalancer.server.port=80"
@@ -118,10 +118,10 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth-router.rule=Host(`livehub.website`) && PathPrefix(`/auth`)"
       - "traefik.http.routers.auth-router.entrypoints=websecure"
       - "traefik.http.routers.auth-router.tls=true"
-      - "traefik.http.routers.user-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/users`)"
+      - "traefik.http.routers.user-router.rule=Host(`livehub.website`) && PathPrefix(`/users`)"
       - "traefik.http.routers.user-router.entrypoints=websecure"
       - "traefik.http.routers.user-router.tls=true"
       - "traefik.http.middlewares.custom-auth.forwardauth.address=http://auth-service:8080/auth/verify"
@@ -147,10 +147,10 @@ services:
       SERVER_PORT: 8080
       SERVER_CHAT_SERVER_URL: http://chat-service:8001
       SERVER_SRT_SERVER_URL: srt://128.199.90.123:9999
-      SERVER_HLS_SERVER_URL: https://thanhserver123.me:444
-      SERVER_RECORD_SERVER_URL: https://thanhserver123.me:444
+      SERVER_HLS_SERVER_URL: https://livehub.website:444
+      SERVER_RECORD_SERVER_URL: https://livehub.website:444
       ELASTICSEARCH_ADDRESSES: http://es:9200
-      MINIO_ENDPOINT: thanhserver123.me:444
+      MINIO_ENDPOINT: livehub.website:444
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: admin12345
       KAFKA_BROKERS: kafka:9092
@@ -164,19 +164,19 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.channel-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/channels`)"
+      - "traefik.http.routers.channel-router.rule=Host(`livehub.website`) && PathPrefix(`/channels`)"
       - "traefik.http.routers.channel-router.entrypoints=websecure"
       - "traefik.http.routers.channel-router.tls=true"
       - "traefik.http.routers.channel-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.stream-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/streams`)"
+      - "traefik.http.routers.stream-router.rule=Host(`livehub.website`) && PathPrefix(`/streams`)"
       - "traefik.http.routers.stream-router.entrypoints=websecure"
       - "traefik.http.routers.stream-router.tls=true"
       - "traefik.http.routers.stream-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.category-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/categories`)"
+      - "traefik.http.routers.category-router.rule=Host(`livehub.website`) && PathPrefix(`/categories`)"
       - "traefik.http.routers.category-router.entrypoints=websecure"
       - "traefik.http.routers.category-router.tls=true"
       - "traefik.http.routers.category-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.public-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/public`)"
+      - "traefik.http.routers.public-router.rule=Host(`livehub.website`) && PathPrefix(`/public`)"
       - "traefik.http.routers.public-router.entrypoints=websecure"
       - "traefik.http.routers.public-router.tls=true"
       - "traefik.http.routers.public-router.middlewares=cors"
@@ -203,7 +203,7 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.notification-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/notifications`)"
+      - "traefik.http.routers.notification-router.rule=Host(`livehub.website`) && PathPrefix(`/notifications`)"
       - "traefik.http.routers.notification-router.entrypoints=websecure"
       - "traefik.http.routers.notification-router.tls=true"
       - "traefik.http.routers.notification-router.middlewares=cors,custom-auth"
@@ -220,7 +220,7 @@ services:
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: donation
       SERVER_PORT: 8080
-      SERVER_FRONTEND_REDIRECT_URL: "https://thanhserver123.me/payment-result"
+      SERVER_FRONTEND_REDIRECT_URL: "https://livehub.website/payment-result"
 
       KAFKA_BROKERS: kafka:9092
       KAFKA_CHANNEL_TOPIC: channel-svc.public.channels
@@ -230,7 +230,7 @@ services:
       VNPAY_TMN_CODE: 15ZMLXYR
       VNPAY_HASH_SECRET: RT19URTSYGGGZTLAHFGXZS8YASN7HIV0
       VNPAY_PAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-      VNPAY_RETURN_URL: https://thanhserver123.me:444/vnpay/handle-payment
+      VNPAY_RETURN_URL: https://livehub.website:444/vnpay/handle-payment
     depends_on:
       pg:
         condition: service_healthy
@@ -238,15 +238,15 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.donation-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/donations`)"
+      - "traefik.http.routers.donation-router.rule=Host(`livehub.website`) && PathPrefix(`/donations`)"
       - "traefik.http.routers.donation-router.entrypoints=websecure"
       - "traefik.http.routers.donation-router.tls=true"
       - "traefik.http.routers.donation-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.wallet-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/wallets`)"
+      - "traefik.http.routers.wallet-router.rule=Host(`livehub.website`) && PathPrefix(`/wallets`)"
       - "traefik.http.routers.wallet-router.entrypoints=websecure"
       - "traefik.http.routers.wallet-router.tls=true"
       - "traefik.http.routers.wallet-router.middlewares=cors,custom-auth"
-      - "traefik.http.routers.vnpay-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/vnpay`)"
+      - "traefik.http.routers.vnpay-router.rule=Host(`livehub.website`) && PathPrefix(`/vnpay`)"
       - "traefik.http.routers.vnpay-router.entrypoints=websecure"
       - "traefik.http.routers.vnpay-router.tls=true"
       - "traefik.http.routers.vnpay-router.middlewares=cors"
@@ -274,12 +274,12 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.chat-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/chat-service`)"
+      - "traefik.http.routers.chat-router.rule=Host(`livehub.website`) && PathPrefix(`/chat-service`)"
       - "traefik.http.routers.chat-router.entrypoints=websecure"
       - "traefik.http.middlewares.strip-chat.stripprefix.prefixes=/chat-service"
       - "traefik.http.routers.chat-router.middlewares=strip-chat,cors"
       - "traefik.http.routers.chat-router.tls=true"
-      - "traefik.http.routers.ws-router.rule=Host(`thanhserver123.me`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.ws-router.rule=Host(`livehub.website`) && PathPrefix(`/ws`)"
       - "traefik.http.routers.ws-router.entrypoints=websecure"
       - "traefik.http.routers.ws-router.tls=true"
       - "traefik.http.services.chat-service.loadbalancer.server.port=8001"
@@ -408,7 +408,7 @@ services:
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin12345
-      MINIO_SERVER_URL: https://thanhserver123.me
+      MINIO_SERVER_URL: https://livehub.website
     command: server /data --console-address ":9001"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
@@ -419,7 +419,7 @@ services:
       - minio_data:/data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minio.rule=Host(`thanhserver123.me`)"
+      - "traefik.http.routers.minio.rule=Host(`livehub.website`)"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls=true"
       - "traefik.http.routers.minio.service=minio-api-svc"
