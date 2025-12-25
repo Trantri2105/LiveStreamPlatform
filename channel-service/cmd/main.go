@@ -27,15 +27,9 @@ import (
 func EnsureBucket(client *minio.Client, bucketName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
-	exists, err := client.BucketExists(ctx, bucketName)
-	if err != nil {
-		errResp := minio.ToErrorResponse(err)
-		if errResp.Code != "NoSuchBucket" {
-			return err
-		}
-	}
+	exists, _ := client.BucketExists(ctx, bucketName)
 	if !exists {
-		err = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
+		err := client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
 		if err != nil {
 			return err
 		}
