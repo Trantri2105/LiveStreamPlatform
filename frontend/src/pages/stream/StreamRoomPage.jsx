@@ -119,25 +119,20 @@ const StreamRoomPage = () => {
                     })
                 ]);
 
-                if (!isMounted) return; // Nếu component unmount thì không làm gì cả
+                if (!isMounted) return;
 
-                // Lọc kết quả rỗng
                 const liveItems = liveRes || [];
                 const endItems = endRes || [];
 
-                // Gộp và lọc bỏ stream đang xem
                 const newItems = [...liveItems, ...endItems].filter(s => s.id !== stream.id);
 
                 // Nếu cả 2 nguồn đều không trả về dữ liệu -> Hết dữ liệu
                 if (liveItems.length === 0 && endItems.length === 0) {
                     setHasMoreRecs(false);
                 } else {
-                    // [QUAN TRỌNG] Logic sửa lỗi Duplicate:
                     if (recPage === 0) {
-                        // Nếu là trang đầu tiên, GHI ĐÈ hoàn toàn (tránh nối đuôi dữ liệu cũ hoặc chạy 2 lần strict mode)
                         setRecommendations(newItems);
                     } else {
-                        // Nếu là trang 2, 3... thì mới NỐI THÊM
                         setRecommendations(prev => [...prev, ...newItems]);
                     }
                 }
@@ -153,7 +148,6 @@ const StreamRoomPage = () => {
             fetchRecs();
         }
 
-        // Cleanup function
         return () => {
             isMounted = false;
         };
@@ -298,7 +292,6 @@ const StreamRoomPage = () => {
 
                                 <div className="flex flex-col gap-4">
                                     {recommendations.map((rec, index) => {
-                                        // Kiểm tra xem đây có phải là phần tử cuối cùng không để gắn ref
                                         if (recommendations.length === index + 1) {
                                             return (
                                                 <div ref={lastRecElementRef} key={`${rec.id}-${index}`}>

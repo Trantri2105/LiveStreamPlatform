@@ -127,7 +127,7 @@ const GlobalHeader = () => {
             {/* Logo */}
             <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
                 <div className="h-8 w-8 bg-violet-600 rounded-lg flex items-center justify-center text-white"><Radio size={20} /></div>
-                <span className="text-xl font-bold text-white hidden sm:block">LiveHub</span>
+                <span className="text-2xl font-bold text-white hidden sm:block">LiveHub</span>
             </div>
 
             {/* Search Bar */}

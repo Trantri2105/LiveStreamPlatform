@@ -153,7 +153,7 @@ const HomePage = () => {
             <main className="p-8 max-w-screen-2xl mx-auto">
                 {/* --- Section: Danh mục phổ biến --- */}
                 <section className="mb-10">
-                    <h2 className="text-xl font-bold text-white mb-4">Danh mục phổ biến</h2>
+                    <h2 className="text-2xl font-bold text-white mb-6">Danh mục phổ biến</h2>
 
                     {loadingCategories ? (
                         <div className="flex gap-4 overflow-hidden">

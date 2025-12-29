@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import chatApi from "../../api/chatApi.js";
+//import chatApi from "../../api/chatApi.js";
 import { WS_BASE_URL } from "../../utils/constants.js";
 import {MessageSquare, Send, Gift, AlertTriangle} from "lucide-react";
 import { formatCurrency } from "../../utils/format.js";
@@ -13,7 +13,6 @@ const ChatBox = ({ streamId, currentUserId, streamStatus }) => {
     const toast = useToast();
     const isLive = streamStatus === 'live' || streamStatus === 'init';
     const isLoggedIn = !!currentUserId || !!localStorage.getItem('access_token');
-
     const isConnecting = useRef(false);
 
     const scrollToBottom = () => {
@@ -27,29 +26,14 @@ const ChatBox = ({ streamId, currentUserId, streamStatus }) => {
         scrollToBottom();
     }, [messages]);
 
-    // 1. Load History
-    useEffect(() => {
-        const loadHistory = async () => {
-            try {
-                const history = await chatApi.getHistory(streamId);
-                if (Array.isArray(history)) {
-                    const validHistory = history
-                        .filter(msg => msg.username)
-                        .reverse();
-                    setMessages(validHistory);
-                }
-            } catch (e) { console.error("Load chat history failed", e); }
-        };
-        if (streamId) loadHistory();
-    }, [streamId]);
+
 
     // 2. WebSocket Connection
     useEffect(() => {
-        if(!isLive) return;
+        if (!streamId) return;
         if (isConnecting.current || wsRef.current?.readyState === WebSocket.OPEN) return;
         const token = localStorage.getItem('access_token');
         const wsURL = `${WS_BASE_URL}/${streamId}${token ? `?token=${token}` : ''}`;
-        const connectionTime = Math.floor(Date.now() / 1000);
         isConnecting.current = true;
         const ws = new WebSocket(wsURL);
         wsRef.current = ws;
@@ -65,7 +49,6 @@ const ChatBox = ({ streamId, currentUserId, streamStatus }) => {
                     setMessages(prev => [...prev, msg]);
                     return;
                 }
-                if (msg.timestamp && msg.timestamp <= connectionTime) return;
                 if (!msg.username) return;
 
                 setMessages(prev => [...prev, msg]);
@@ -84,7 +67,7 @@ const ChatBox = ({ streamId, currentUserId, streamStatus }) => {
             wsRef.current = null;
             isConnecting.current = false;
         };
-    }, [streamId, isLive]);
+    }, [streamId]);
 
     const handleSendMessage = (e) => {
         e.preventDefault();
@@ -116,9 +99,15 @@ const ChatBox = ({ streamId, currentUserId, streamStatus }) => {
                 <div className="font-bold text-sm uppercase tracking-wider flex items-center gap-2 text-gray-300">
                     <MessageSquare size={16}/> Trò chuyện
                 </div>
-                <div className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> LIVE
-                </div>
+                {isLive ? (
+                    <div className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> LIVE
+                    </div>
+                ) : (
+                    <div className="text-[10px] font-bold text-gray-500 bg-gray-500/10 px-2 py-0.5 rounded-full">
+                        CHAT
+                    </div>
+                )}
             </div>
 
             {/* Messages List */}
@@ -181,10 +170,8 @@ const ChatBox = ({ streamId, currentUserId, streamStatus }) => {
                 <div className="relative">
                     <input
                         type="text"
-                        // 4. Disable input nếu chưa đăng nhập
                         disabled={!isLoggedIn || !isLive}
                         className={`w-full bg-black/30 text-white rounded-xl py-2.5 pl-4 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-violet-500 border border-gray-700 transition-all ${!isLoggedIn ? 'cursor-not-allowed opacity-60' : ''}`}
-                        // 5. Đổi placeholder tùy trạng thái
                         placeholder={
                             !isLive ? "Buổi livestream đã kết thúc" :
                                 (!isLoggedIn ? "Đăng nhập để chat" : "Gửi tin nhắn...")

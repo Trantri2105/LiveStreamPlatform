@@ -4,14 +4,15 @@ import donateApi from "../../api/donateApi.js";
 import Button from "./Button.jsx";
 import Input from "./Input.jsx";
 import { formatCurrency } from "../../utils/format.js";
-
+import { useToast } from "../../context/ToastContext.jsx";
 const DonateModal = ({ isOpen, onClose, channelId, streamId }) => {
     const [amount, setAmount] = useState(10000);
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const toast = useToast();
+
     const handleDonate = async () => {
-        if (amount < 10000) return alert("Số tiền tối thiểu là 10.000 VNĐ");
 
         setLoading(true);
         try {
@@ -25,10 +26,13 @@ const DonateModal = ({ isOpen, onClose, channelId, streamId }) => {
 
             // Nếu thành công, redirect qua cổng thanh toán VNPay
             if (res.payment_url) {
-                window.location.href = res.payment_url;
+                toast.success("Đang chuyển hướng đến cổng thanh toán...");
+                setTimeout(() => {
+                    window.location.href = res.payment_url;
+                }, 1000);
             }
         } catch (error) {
-            alert("Lỗi tạo giao dịch: " + error.message);
+            toast.error("Lỗi tạo giao dịch: Đảm bảo đã nhập số tiền và lời nhắn");
             setLoading(false);
         }
     };
