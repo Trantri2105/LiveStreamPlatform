@@ -7,7 +7,7 @@ info:
 servers:
   - url: http://localhost:8081
     description: Local development server
-  - url: https://thanhserver123.me:444
+  - url: https://livehub.website:444
     description: Remote server
 tags:
   - name: Auth
