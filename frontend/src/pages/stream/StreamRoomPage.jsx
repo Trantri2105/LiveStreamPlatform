@@ -178,6 +178,14 @@ const StreamRoomPage = () => {
         }
     };
 
+    const handleDonate = () => {
+        if (!user) {
+            toast.warning("Vui lòng đăng nhập để ủng hộ streamer.");
+            return;
+        }
+        setShowDonateModal(true);
+    }
+
     const handleToggleNotification = async () => {
         if (!stream?.channel?.id) return;
         try {
@@ -267,7 +275,11 @@ const StreamRoomPage = () => {
                                         ) : (
                                             <Button icon={Heart} variant="primary" onClick={handleSubscribe} isLoading={loadingSub}>Theo dõi</Button>
                                         )}
-                                        <Button icon={Gift} variant="success" onClick={() => setShowDonateModal(true)} className="animate-pulse hover:animate-none">Ủng hộ</Button>
+                                        <Button
+                                            icon={Gift}
+                                            variant="success"
+                                            onClick={handleDonate}
+                                            className="animate-pulse hover:animate-none">Ủng hộ</Button>
                                     </div>
                                 </div>
                                 <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800">
