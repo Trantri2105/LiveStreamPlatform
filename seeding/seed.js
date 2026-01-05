@@ -37,13 +37,13 @@ const loginAndGetToken = async () => {
     }
 };
 
-const fetchCategories = async (token) => {
+const fetchCategories = async () => {
     console.log("Đang lấy danh sách Categories...");
     try {
         const response = await axios.post(`${API_URL}/public/categories/search`, {
             limit: 50,
             offset: 0,
-            query: ""
+            search_text: ""
         });
         const data = response.data.data || response.data;
         const categories = Array.isArray(data) ? data : (data.items || []);
@@ -81,7 +81,7 @@ const uploadImage = async (token, categoryId, categoryName, fileName) => {
 const runSeeding = async () => {
     console.log("Đang chờ Backend sẵn sàng (10s)...");
     // Chờ backend khởi động xong DB (tăng lên 10s cho chắc chắn)
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise(resolve => setTimeout(resolve, 30000));
     try {
         const token = await loginAndGetToken();
         const categories = await fetchCategories();
