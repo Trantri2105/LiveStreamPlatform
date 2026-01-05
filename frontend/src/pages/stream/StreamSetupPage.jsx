@@ -6,12 +6,13 @@ import Input from "../../components/common/Input.jsx";
 import Button from "../../components/common/Button.jsx";
 import { CheckCircle, ChevronLeft, Link as LinkIcon, Search, UploadCloud } from "lucide-react";
 import { useToast } from "../../context/ToastContext.jsx";
+import ToxicitySlider from "../../components/stream/ToxicitySlider.jsx";
 
 const StreamSetupPage = () => {
     const navigate = useNavigate();
     const toast = useToast();
     const [step, setStep] = useState(1); // 1: Form, 2: Result
-    const [formData, setFormData] = useState({ title: '', description: '', category_id: '' });
+    const [formData, setFormData] = useState({ title: '', description: '', category_id: '', toxic_threshold: 0.5 });
 
     // State cho tìm kiếm category
     const [categorySearch, setCategorySearch] = useState('');
@@ -198,6 +199,12 @@ const StreamSetupPage = () => {
                                 />
                             </div>
                         </div>
+
+                        {/* Toxicity Threshold Slider */}
+                        <ToxicitySlider
+                            value={formData.toxic_threshold}
+                            onChange={(value) => setFormData({ ...formData, toxic_threshold: value })}
+                        />
 
                         <Button className="w-full py-4 mt-4 font-bold text-lg" onClick={handleCreateStream} isLoading={loading}>
                             Tạo Phiên Live

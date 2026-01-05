@@ -123,7 +123,7 @@ const GlobalHeader = () => {
     };
 
     return (
-        <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 sticky top-0 z-40">
+        <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 pl-24 sticky top-0 z-40">
             {/* Logo */}
             <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
                 <div className="h-8 w-8 bg-violet-600 rounded-lg flex items-center justify-center text-white"><Radio size={20} /></div>

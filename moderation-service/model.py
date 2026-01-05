@@ -20,10 +20,23 @@ model.eval()
 logger.info(f"Model loaded on {device}")
 
 
-def predict_toxicity(text: str) -> dict:
+def predict_toxicity(text: str, threshold: float = None) -> dict:
+    """
+    Predict toxicity of text.
+    
+    Args:
+        text: Text to analyze
+        threshold: Optional custom threshold (0.0-1.0). If None, uses TOXIC_THRESHOLD from config.
+    
+    Returns:
+        Dictionary with is_toxic boolean and scores for each category
+    """
     if not text.strip():
         return {"is_toxic": False,
                 "scores": {k: 0.0 for k in ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]}}
+
+    # Use provided threshold or fall back to config default
+    effective_threshold = threshold if threshold is not None else TOXIC_THRESHOLD
 
     inputs = tokenizer(
         text,
@@ -37,7 +50,7 @@ def predict_toxicity(text: str) -> dict:
         logits = model(**inputs).logits
         probs = torch.sigmoid(logits).cpu().numpy()[0]
 
-    is_toxic = any(score > TOXIC_THRESHOLD for score in probs)
+    is_toxic = any(score > effective_threshold for score in probs)
 
     scores = {
         "toxic": float(f"{probs[0]:.4f}"),
@@ -48,4 +61,4 @@ def predict_toxicity(text: str) -> dict:
         "identity_hate": float(f"{probs[5]:.4f}"),
     }
 
-    return {"is_toxic": bool(is_toxic), "scores": scores}
+    return {"is_toxic": bool(is_toxic), "scores": scores, "threshold_used": effective_threshold}

@@ -17,6 +17,12 @@ def predict():
         return jsonify({"error": "No content provided"}), 400
 
     text = data["content"]
+    # Accept optional threshold parameter, default to None (will use config default)
+    threshold = data.get("threshold", None)
+    
     logger.info(f"Predicting toxicity for content: {text[:50]}...") 
-    result = predict_toxicity(text)
+    if threshold is not None:
+        logger.info(f"Using custom threshold: {threshold}")
+    
+    result = predict_toxicity(text, threshold=threshold)
     return jsonify(result)

@@ -5,6 +5,7 @@ import Button from "../../components/common/Button.jsx";
 import { Link } from "react-router-dom";
 import GlobalHeader from "../../components/common/GlobalHeader.jsx";
 import channelApi from "../../api/channelApi.js";
+import CategorySidebar from "../../components/common/CategorySidebar.jsx";
 
 const POPULAR_GAMES = [
     "Dota 2",
@@ -147,10 +148,14 @@ const HomePage = () => {
 
     return (
         <div className="min-h-screen bg-gray-950">
+            {/* Category Sidebar */}
+            <CategorySidebar />
+            
             {/* Header Section */}
             <GlobalHeader />
 
-            <main className="p-8 max-w-screen-2xl mx-auto">
+            {/* Main content with left margin to accommodate sidebar */}
+            <main className="p-8 max-w-screen-2xl mx-auto ml-20 transition-all duration-300">
                 {/* --- Section: Danh mục phổ biến --- */}
                 <section className="mb-10">
                     <h2 className="text-2xl font-bold text-white mb-6">Danh mục phổ biến</h2>
