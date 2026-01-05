@@ -136,7 +136,7 @@ func (ca *categoryHandler) GetCategoryBySearchText() gin.HandlerFunc {
 			})
 			return
 		}
-		if req.Limit <= 0 || req.Limit > 50 {
+		if req.Limit <= 0 || req.Limit > 100 {
 			req.Limit = 10
 		}
 		if req.Offset < 0 {
