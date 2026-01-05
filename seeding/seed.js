@@ -3,7 +3,8 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 const API_URL = process.env.API_URL;
-
+const EMAIL = process.env.ADMIN_EMAIL;
+const PASSWORD = process.env.ADMIN_PASSWORD;
 const imageMapping = {
     'League of Legends': 'LOL.jpg',
     'Minecraft': 'Minecraft.jpg',
@@ -14,7 +15,47 @@ const imageMapping = {
     'Call of Duty: Warzone': 'Warzone.jpg',
 };
 
-const uploadImage = async (categoryId, categoryName, fileName) => {
+const loginAndGetToken = async () => {
+    console.log(`Đang đăng nhập với email: ${EMAIL}...`);
+    try {
+        const response = await axios.post(`${API_URL}/auth/login`, {
+            email: EMAIL,
+            password: PASSWORD
+        });
+        const token = response.data.access_token || response.data.data?.access_token;
+
+        if (!token) {
+            console.error("Response data:", response.data);
+            throw new Error("Không tìm thấy 'access_token' trong response!");
+        }
+
+        console.log("Đăng nhập thành công! Token length:", token.length);
+        return token;
+    } catch (error) {
+        console.error("Đăng nhập thất bại:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+const fetchCategories = async (token) => {
+    console.log("Đang lấy danh sách Categories...");
+    try {
+        const response = await axios.post(`${API_URL}/public/categories/search`, {
+            limit: 50,
+            offset: 0,
+            query: ""
+        });
+        const data = response.data.data || response.data;
+        const categories = Array.isArray(data) ? data : (data.items || []);
+        console.log(`📋 Tìm thấy ${categories.length} categories.`);
+        return categories;
+    } catch (error) {
+        console.error("Lỗi lấy danh sách category:", error.message);
+        return [];
+    }
+}
+
+const uploadImage = async (token, categoryId, categoryName, fileName) => {
     const filePath = path.join(__dirname, 'images', fileName);
     if (!fs.existsSync(filePath)) {
         console.warn(`Không tìm thấy file ảnh: ${fileName} cho category "${categoryName}"`);
@@ -28,6 +69,7 @@ const uploadImage = async (categoryId, categoryName, fileName) => {
         await axios.put(`${API_URL}/categories/${categoryId}/image`, form, {
             headers: {
                 ...form.getHeaders(),
+                'Authorization': `Bearer ${token}`
             },
         });
         console.log(`Đã upload ảnh cho: ${categoryName} (ID: ${categoryId})`);
@@ -40,35 +82,24 @@ const runSeeding = async () => {
     console.log("Đang chờ Backend sẵn sàng (10s)...");
     // Chờ backend khởi động xong DB (tăng lên 10s cho chắc chắn)
     await new Promise(resolve => setTimeout(resolve, 10000));
-
     try {
-        console.log("Đang lấy danh sách Categories từ API...");
-        const response = await axios.get(`${API_URL}/categories?limit=50`);
-        const categories = Array.isArray(response.data) ? response.data : (response.data.data || []);
-
+        const token = await loginAndGetToken();
+        const categories = await fetchCategories();
         if (categories.length === 0) {
-            console.log("Không tìm thấy Category nào trong DB. Hãy chắc chắn SQL init đã chạy.");
+            console.log("Không có category nào để seed.");
             return;
         }
-
-        console.log(`Tìm thấy ${categories.length} categories. Bắt đầu map ảnh...`);
-
-        // 2. Duyệt qua từng category lấy được từ DB
         for (const cat of categories) {
             const catName = cat.title || cat.name;
             if (imageMapping[catName]) {
-                const imageName = imageMapping[catName];
-                await uploadImage(cat.id, catName, imageName);
+                await uploadImage(token, cat.id, catName, imageMapping[catName]);
             }
         }
 
-        console.log("Hoàn tất quá trình seeding ảnh.");
+        console.log("Hoàn tất.");
 
     } catch (error) {
-        console.error("Lỗi Fatal khi chạy script:", error.message);
-        if (error.code === 'ECONNREFUSED') {
-            console.error("=> Không thể kết nối tới Backend. Kiểm tra lại tên service và port trong docker-compose.");
-        }
+        console.error("Script gặp lỗi Fatal:", error.message);
     }
 };
 
