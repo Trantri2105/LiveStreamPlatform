@@ -182,6 +182,19 @@ services:
       - "traefik.http.routers.public-router.middlewares=cors"
       - "traefik.http.services.channel-service.loadbalancer.server.port=8080"
 
+  seeder:
+    image: node:18-alpine
+    container_name: category-seeder
+    depends_on:
+      - channel-service
+    volumes:
+      - ./seeding:/app
+    working_dir: /app
+    environment:
+      - API_URL=http://128.199.90.123:8081
+    command: >
+      sh -c "npm install axios form-data && node seed.js"
+
   notification-service:
     build:
       dockerfile: ./notification-service/build/Dockerfile
