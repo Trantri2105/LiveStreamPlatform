@@ -23,7 +23,7 @@ const ToxicitySlider = ({ value = 0.5, onChange }) => {
     return (
         <div className="space-y-4">
             <label className="block text-sm font-medium text-gray-400">
-                Chat Moderation Level
+                Mức kiểm duyệt chat
             </label>
 
             {/* Current Selection Display */}
@@ -114,8 +114,8 @@ const ToxicitySlider = ({ value = 0.5, onChange }) => {
 
             {/* Help Text */}
             <div className="text-xs text-gray-500 bg-gray-800/50 p-3 rounded-lg border border-gray-700">
-                <strong className="text-gray-400">💡 Tip:</strong> Higher levels will filter more messages. 
-                Start with "Moderate" and adjust based on your audience.
+                <strong className="text-gray-400">💡 Tip:</strong> Level cao hơn sẽ lọc nhiều tin nhắn hơn.
+                Tuỳ chỉnh mức độ kiểm duyệt dựa vào nội dung stream và tệp khán giả của bạn.
             </div>
         </div>
     );

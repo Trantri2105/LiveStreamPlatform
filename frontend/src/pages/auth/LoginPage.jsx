@@ -22,7 +22,8 @@ const LoginPage = () => {
             navigate('/');
         } catch (err) {
             console.error(err);
-            setError(err.message || "Email hoặc mật khẩu không đúng");
+            const errorMessage = err.response?.data?.message || err.message || "Đăng nhập thất bại";
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }

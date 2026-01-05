@@ -275,11 +275,14 @@ const StreamRoomPage = () => {
                                         ) : (
                                             <Button icon={Heart} variant="primary" onClick={handleSubscribe} isLoading={loadingSub}>Theo dõi</Button>
                                         )}
-                                        <Button
-                                            icon={Gift}
-                                            variant="success"
-                                            onClick={handleDonate}
-                                            className="animate-pulse hover:animate-none">Ủng hộ</Button>
+
+                                        {stream.status === 'live' && (
+                                            <Button
+                                                icon={Gift}
+                                                variant="success"
+                                                onClick={handleDonate}
+                                                className="animate-pulse hover:animate-none">Ủng hộ</Button>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800">

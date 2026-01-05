@@ -42,7 +42,8 @@ const RegisterPage = () => {
             navigate('/login');
         } catch (err) {
             console.error(err);
-            setError(err.message || "Đăng ký thất bại");
+            const errorMessage = err.response?.data?.message || err.message || "Đăng ký thất bại";
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }

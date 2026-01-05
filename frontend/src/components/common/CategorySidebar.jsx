@@ -71,7 +71,7 @@ const CategorySidebar = () => {
             {/* Header with Toggle Button */}
             <div className={`p-4 border-b border-gray-800 flex items-center flex-shrink-0 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
                 {isExpanded && (
-                    <h3 className="text-white font-bold text-sm">Categories</h3>
+                    <h3 className="text-white font-bold text-sm">Danh mục đề xuất</h3>
                 )}
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
@@ -140,9 +140,6 @@ const CategorySidebar = () => {
                                             <h4 className="text-gray-300 font-semibold text-sm truncate group-hover:text-violet-400 transition-colors">
                                                 {cat.title}
                                             </h4>
-                                            <p className="text-gray-500 text-xs truncate">
-                                                {cat.description || "Explore content"}
-                                            </p>
                                         </div>
                                     </div>
                                 ) : (
@@ -187,7 +184,7 @@ const CategorySidebar = () => {
                                 ) : (
                                     <>
                                         <ChevronDown size={20} />
-                                        {isExpanded && <span className="text-sm font-medium">Load More</span>}
+                                        {isExpanded && <span className="text-sm font-medium">Xem thêm</span>}
                                     </>
                                 )}
                             </button>
