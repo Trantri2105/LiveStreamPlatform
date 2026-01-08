@@ -1,13 +1,13 @@
 import torch
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from logger import logger
 from config import MODEL_NAME, DEVICE, MAX_LENGTH, TOXIC_THRESHOLD
 
 device = torch.device("cuda" if DEVICE == "cuda" and torch.cuda.is_available() else "cpu")
 logger.info(f"Loading model: {MODEL_NAME} on {device}...")
 
-tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
-model = BertForSequenceClassification.from_pretrained(MODEL_NAME)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
 
 if device.type == 'cpu':
     logger.info("⚡ Applying dynamic quantization for CPU inference...")

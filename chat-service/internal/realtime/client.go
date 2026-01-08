@@ -113,7 +113,7 @@ func (c *Client) ReadPump(th *ThreadHub) {
 			blockMsg := map[string]interface{}{
 				"type":      "error",
 				"code":      "content_violation",
-				"message":   "Your message was hidden because it violates our community standards.",
+				"message":   "Tin nhắn của bạn đã bị ẩn vì vi phạm tiêu chuẩn cộng đồng của chúng tôi.",
 				"timestamp": time.Now().Unix(),
 			}
 			if b, e := json.Marshal(blockMsg); e == nil {
